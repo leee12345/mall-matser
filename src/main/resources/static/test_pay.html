@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test pay</title>
+    <link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="./css/common.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+
+</head>
+<body>
+<div id="app">
+    <form action="/ali/pay.do" method="post">
+        订单号：<input type="text" name="outTradeNo" required><br/>
+        订单名称：<input type="text" name="subject" required><br/>
+        付款金额：<input type="text" name="totalAmount" required><br/>
+        商品描述：<input type="text" name="body"><br/>
+        <input type="submit" value="下单"> <input type="reset" value="重置">
+    </form>
+</div>
+</body>
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data() {
+            return {
+                orderNo: '',
+                commodityName: '',
+                amount: '',
+
+                pay_form: {
+                    orderNo: '',
+                    commodityName: '',
+                    amount: '',
+
+                },
+                paying: false,
+                hanging: false,
+                paypal_html: "",
+            };
+        },
+        methods: {
+            //订单dialog事件
+            onSubmit() {
+                var params = new URLSearchParams();
+                params.append("outTradeNo", this.pay_form.orderNo)
+                params.append("subject", this.pay_form.commodityName)
+                params.append("totalAmount", this.pay_form.amount)
+                params.append("body", "")
+
+
+                axios.post("/ali/pay.do", params).then(response => {
+                    //	我现在也不知道里面应该是什么，先打印出来再说吧
+                    console.log(response.data);
+                    this.paypal_html = response.data;
+                    this.paying = false;
+                    this.hanging = true;
+                }).catch(err => {
+                    console.log(err);
+                    this.$message.error("连接服务器异常");
+                })
+            },
+            cancel() {
+                this.paying = false;
+            },
+        }
+    });
+
+</script>
+
+</html>

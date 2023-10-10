@@ -1,0 +1,10 @@
+.header-simple{
+	height: 104px;
+	border-bottom: 1px solid #DCDCDC;
+}
+
+.header-simple-content{
+	height: 103px;
+	display: flex;
+	align-items: center;
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>商品编辑 | 后台管理 </title>
+		<link rel="stylesheet" type="text/css" href="./../element-ui/index.css">
+		<link rel="stylesheet" type="text/css" href="./../css/common.css" />
+		<link rel="stylesheet" type="text/css" href="../components/admin-frame.css" />
+		<link rel="stylesheet" type="text/css" href="./../components/min-width-container.css"/>
+		<style>
+			#app{
+				height: 100%;
+			}
+
+			.editor{
+				width: 100%;
+			}
+
+			.editor > div{
+				/*z-index: 1 !important;*/
+			}
+
+			.app-product{
+				display: flex;
+			}
+
+			.app-product-left{
+				width: 300px;
+				height: 400px;
+				border: 1px solid #F5F7FA;
+			}
+
+			.app-product-left .image-slot{
+				width: 100%;
+				height: 100%;
+				background: #F5F7FA;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.app-product-left-upload,
+			.app-product-left .el-upload,
+			.app-product-left .el-image{
+				width: 100%;
+				height: 100%;
+			}
+
+			.app-product-right{
+				flex-grow: 1;
+			}
+
+			#app .el-button--primary{
+				background-color: #3C8DBC;
+				border-color: #3C8DBC;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<admin-frame title="商品添加/编辑">
+				<min-width-container>
+					<div class="app-product m-t-20">
+						<div class="app-product-left pointer"  title="点击更换图片">
+							<el-upload
+							  class="app-product-left-upload"
+							  action="/mgr/product/upload.do"
+							  name="stream"
+							  :limit="1"
+							  :show-file-list="false"
+							  :before-upload="before_upload"
+							  :on-success="on_success"
+							  ref="productImage">
+							  <el-image :src="product_image">
+								<div slot="error" class="image-slot">
+								  <i class="el-icon-picture-outline text-1 text-general-1"></i>
+								</div>
+							  </el-image>
+							</el-upload>
+						</div>
+						<div class="app-product-right">
+							<el-form ref="form" :model="form" label-width="80px">
+							  <el-form-item label="商品名称">
+							    <el-input v-model="form.name" style="width: 60%;" ></el-input>
+							  </el-form-item>
+							  <el-form-item label="类型">
+							    <el-select v-model="form.type" placeholder="请商品类型" style="width: 60%;">
+							      <el-option v-for="cls, index of classes" :key="index"  :label="cls.name" :value="cls.class_id" ></el-option>
+							    </el-select>
+							  </el-form-item>
+							  <el-form-item label="价格" >
+								  <template>
+									  <el-input-number v-model="form.price" :precision="2" :step="0.1"  style="width: 60%;"></el-input-number>
+								  </template>
+							  </el-form-item>
+							  <el-form-item label="库存" >
+								  <template>
+								  		<el-input-number v-model="form.stock"  :min="0" :max="9999" style="width: 60%;"></el-input-number>
+								  </template>
+							  </el-form-item>
+							  <el-form-item>
+							    <el-button type="primary" @click="save" v-text="id === '' ? '添加': '保存'"></el-button>
+							    <el-button @click="window.history.back()">取消</el-button>
+							  </el-form-item>
+							</el-form>
+						</div>
+					</div>
+					<div class="app-tabs  m-t-20 m-b-20">
+						<el-tabs v-model="activeName">
+						    <el-tab-pane label="编辑小图" name="first">
+								<el-upload
+								  action="/mgr/product/upload.do"
+								  list-type="picture-card"
+								  name="stream"
+								  :auto-upload="true"
+								  :before-upload="before_upload"
+								  :on-success="on_success2"
+								  :file-list="fileList">
+								    <i slot="default" class="el-icon-plus"></i>
+								    <div slot="file" slot-scope="{file}">
+								      <img class="el-upload-list__item-thumbnail" :src="file.url" alt="">
+								      <span class="el-upload-list__item-actions">
+								        <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
+								          <i class="el-icon-zoom-in"></i>
+								        </span>
+								        <span v-if="!disabled" class="el-upload-list__item-delete" @click="handleRemove(file)">
+								          <i class="el-icon-delete"></i>
+								        </span>
+								      </span>
+								    </div>
+								</el-upload>
+								<el-dialog :visible.sync="dialogVisible">
+								  <img width="100%" :src="dialogImageUrl" alt="">
+								</el-dialog>
+							</el-tab-pane>
+
+						    <el-tab-pane label="商品详情" name="second">
+								<div>
+									<div id="editor1" class="editor"></div>
+								</div>
+							</el-tab-pane>
+						    <el-tab-pane label="商品规格参数" name="third">
+								<div>
+									<div id="editor2" class="editor"></div>
+								</div>
+							</el-tab-pane>
+						</el-tabs>
+					</div>
+
+				</min-width-container>
+			</admin-frame>
+		</div>
+		<script src="./../js/vue.js"></script>
+		<script src="./../js/axios.min.js"></script>
+		<script src="https://unpkg.com/wangeditor@4.6.0/dist/wangEditor.min.js"></script>
+<script src="../components/admin-frame.js"></script>
+		<script src="./../element-ui/index.js"></script>
+		<script src="./../components/min-width-container.js"></script>
+		<script>
+			const app = new Vue({
+			    el: "#app",
+			    data(){
+					return {
+						form: {
+							name: '',
+							type: '',
+							price: 0,
+							stock: 9999
+						},
+						id: '',  //此为商品id，因此而判断是更新模式还是新增模式
+						activeName: 'first',
+						editorData: '',
+						fileList: [],
+						classes: [],
+						product_image: '',
+						dialogImageUrl: '',
+						dialogVisible: false,
+						disabled: false
+					};
+			    },
+			    methods: {
+					/* 文件上传之前的钩子 */
+			        before_upload(file){
+						//这里的file是一个File类型的对象
+						const isJPG = file.type === 'image/jpeg';
+						const isPNG = file.type === 'image/png';
+						const isBMP = file.type === 'image/bmp';
+						const isLt10M = file.size / 1024 / 1024 < 10;
+						if(!isJPG && !isPNG && !isBMP){
+							this.$message.error('上传图片只能是JPG/PNG/BMP 格式!');
+							return false;
+						}
+						if(!isLt10M){
+							this.$message.error('上传图片必须小于10M');
+							return false;
+						}
+						return true
+					},
+					/*文件上传成功的钩子*/
+					on_success(response, file, fileList){
+						this.$refs.productImage.clearFiles();
+						if(response.status === 0){
+							this.product_image = response.data.url;
+						}else{
+							this.$message.error(response.msg);
+						}
+					},
+					/*文件上传成功的钩子 2 - 多文件时*/
+					on_success2(response, file, fileList){
+						//这里的file和fileList元素都是包裹对象
+						if(response.status === 0){
+							file.url = response.data.url;
+						}else{
+							const fileIndex = fileList.indexOf(file);
+							fileList.splice(fileIndex, 1);
+							this.$message.error(response.msg);
+						}
+						this.fileList = fileList;
+					},
+					/*删除小图*/
+					handleRemove(file) {
+						const fileIndex = this.fileList.indexOf(file);
+						this.fileList.splice(fileIndex, 1);
+					},
+					/*大图预览*/
+					handlePictureCardPreview(file) {
+						this.dialogImageUrl = file.url;
+						this.dialogVisible = true;
+					},
+					//保存内容
+					save(){
+						const params = new URLSearchParams();
+						params.append('name', this.form.name);
+						params.append('class_id', this.form.type)
+						params.append('icon_url', this.product_image)
+						let subImagesStr = '';
+						for(let i = 0; i < this.fileList.length; i++){
+							subImagesStr += this.fileList[i].url;
+							if(i != this.fileList.length - 1){
+								subImagesStr += ";";
+							}
+						}
+						params.append('sub_images', subImagesStr)
+						params.append('detail', this.editor1.txt.html())
+						params.append('spec_param', this.editor2.txt.html())
+						params.append('price', this.form.price)
+						params.append('stock', this.form.stock)
+						if(this.id){
+							params.append('id', this.id);
+							axios.post('/mgr/product/saveproduct.do', params).then(response=>{
+								if(response.data.status === 0){
+									this.$message({
+									  message: '恭喜你，更新成功',
+									  type: 'success'
+									});
+								}else{
+									this.$message.error(response.data.msg);
+								}
+							}).catch(err=>{
+								this.$message.error("无法连接到服务器");
+							});
+						}else{
+							axios.post('/mgr/product/saveproduct.do', params).then(response=>{
+								if(response.data.status === 0){
+									this.$message({
+									  message: '恭喜你，添加成功',
+									  type: 'success'
+									});
+									this.id = response.data.data;
+								}else{
+									this.$message.error(response.data.msg);
+								}
+							}).catch(err=>{
+								this.$message.error("无法连接到服务器");
+							});
+						}
+					}
+			    },
+				created() {
+					// 页面启动的时候查询是否传了id
+					const queryStr = window.location.search;
+					const idStr = queryStr.substring(1, queryStr.length);
+					if(/^\d+$/.test(idStr)){
+						this.id = idStr;
+						console.log("更新mode", this.id);
+						//加载内容
+						const params = new URLSearchParams();
+						params.append('productId', this.id);
+						axios.post("/product/getdetail.do", params).then(response=>{
+							if(response.data.status === 0){
+								const commodity = response.data.data;
+								this.form.name = commodity.name;
+								this.form.type = commodity.classId;
+								this.form.price = commodity.price;
+								this.form.stock = commodity.stock;
+								this.editor1.txt.html(commodity.detail);
+								this.editor2.txt.html(commodity.specParam);
+								this.product_image = commodity.iconUrl;
+								const subImageUrls = commodity.subImages.split(";");
+								const subImagesFiles = [];
+								for(let subImageUrl of subImageUrls){
+									subImagesFiles.push({url: subImageUrl});
+								}
+								this.fileList = subImagesFiles;
+							}else{
+								this.$message.error(response.data.msg);
+							}
+						}).catch(err=>{
+							this.$message.error("连接服务器异常");
+						});
+					}
+
+					/*获取类型列表*/
+					axios.post("/param/findallparams.do").then(response=>{
+						if(response.data.status === 0){
+							this.classes = response.data.data;
+							this.form.type = this.classes[0].class_id;
+						}
+					}).catch(err=>{
+						console.log(err);
+					});
+
+				},
+				mounted() {
+					const editorFactory = (elem, onNewHtml) => {
+						const E = window.wangEditor
+						const editor = new E(elem);
+						// 配置 onchange 回调函数，将数据同步到 vue 中
+						if(onNewHtml){
+							editor.config.onchange = onNewHtml;
+						}
+						editor.config.uploadImgMaxSize = 10 * 1024 * 1024; // 10M
+						editor.config.uploadImgAccept = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'];
+						editor.config.uploadImgMaxLength = 1; //最多只能上传1张
+						editor.config.customUploadImg =  (resultFiles, insertImgFn) => {
+							const formData = new FormData();
+							formData.append("stream", resultFiles[0]);
+							axios.post("/mgr/product/upload.do", formData).then(response=>{
+								if(response.data.status === 0){
+									// 上传图片，返回结果，将图片插入到编辑器中
+									insertImgFn(response.data.data.url);
+								}else{
+									this.$message.error(response.data.msg);
+								}
+							}).catch(err=>{
+								console.log(err);
+							});
+						}
+
+						editor.create();
+						return editor;
+					}
+					this.editor1 = editorFactory("#editor1");
+					this.editor2 = editorFactory("#editor2");
+				}
+			});
+		</script>
+	</body>
+</html>

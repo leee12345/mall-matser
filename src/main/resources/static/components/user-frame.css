@@ -1,0 +1,41 @@
+.user-frame{
+	display: flex;
+/*	这个布局表示弹性盒式布局，目前来看默认是横向的排列*/
+/*	没有设置高度，那么这个元素的高度应该是和子元素相匹配的，相当于子元素将其撑大？我也不知道*/
+}
+
+.user-frame-left{
+	width: 181px;
+	background: #F5F5F5;
+}
+
+.user-frame-right{
+	flex-grow: 1;
+	padding: 0 20px;
+}
+
+.user-frame-left-info{
+	padding: 20px 0px;
+}
+
+.user-frame-left-info-portraint{
+}
+
+.user-frame-left-info-portraint > div{
+	width: 98px;
+	height: 98px;
+	margin: auto;
+	background: #41B5E6;
+	border-radius: 200px;
+}
+
+.user-frame .el-menu-item{
+	min-width: 180px;
+}
+
+.user-frame .el-submenu__title{
+	border-left: 4px solid #3EB4E5;
+	border-top: 1px dashed #DBDBDB;
+	border-bottom: 1px dashed #DBDBDB;
+	font-weight: 900;
+}

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>订单详情 | 机械配件商城</title>
+  <link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+  <link rel="stylesheet" type="text/css" href="./css/common.css" />
+  <link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+  <link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+  <link rel="stylesheet" type="text/css" href="./components/footer-image.css" />
+  <link rel="stylesheet" type="text/css" href="./components/footer-link.css" />
+  <link rel="stylesheet" type="text/css" href="./components/header-full.css" />
+  <link rel="stylesheet" type="text/css" href="./components/user-frame.css" />
+  <style>
+    .app-title{
+      border-bottom: 2px solid #EAEAEA;
+    }
+
+    .app-title-text:before{
+      content: "";
+      display: block;
+      position: absolute;
+      width: 0px;
+      height: 0px;
+      border-left: 5px solid transparent;
+      border-top: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid #3197D7;
+      bottom: 0;
+      right: 53px;
+    }
+
+    .app-title-text{
+      color: #3197D7;
+      border-bottom: 2px solid #3197D7;
+      display: inline-block;
+      position: relative;
+      width: 116px;
+      height: 36px;
+      line-height: 34px;
+      text-align: center;
+      cursor: pointer;
+      top: 2px;
+    }
+
+    .app-order{
+      padding: 20px;
+    }
+
+    .app-order-warpper{
+      border: 1px solid #DAE5F2;
+      padding: 16px;
+    }
+
+    .app-order-warpper div{
+      line-height: 2;
+    }
+
+    .app-order-warpper-title{
+      font-weight: 900;
+    }
+
+    .app-order-warpper .el-button--mini{
+      padding: 4px 8px;
+    }
+
+    .app-order-grid{
+      border: 1px solid #E3E3E3;
+    }
+
+    .app-order-grid-row{
+      display: grid;
+      grid-template-columns: 500px 100px 100px 100px;
+      grid-template-rows: auto;
+    }
+
+    .app-order-grid-row > div {
+      line-height: 80px;
+    }
+
+    .app-order-grid-row:first-child {
+      grid-template-rows: 60px;
+      background: #F0F0F0;
+    }
+
+    .app-order-grid-row:first-child > div {
+      line-height: 60px;
+    }
+
+    .app-order-grid-row-item {
+      border-top: 1px solid #E3E3E3;
+    }
+
+    /*	适配行内的图片*/
+    .inline-grid {
+      display: grid;
+      grid-template-columns: 70px 150px;
+    }
+
+    .inline-grid:first-child {
+      margin-top: 10px;
+      margin-left: 150px;
+    }
+
+    .inline-grid:nth-child(2) {
+      margin-top: 10px;
+      padding-left: -400px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <header-full :bordered="true"></header-full>
+  <user-frame class="m-t-20">
+    <div class="app-title">
+      <div class="app-title-text">评论详情</div>
+    </div>
+
+    <!--				还应该添加一个返回上级菜单的按钮-->
+    <!--				用户信息被写在session中，返回页面将自动取session中的内容重新加载数据-->
+
+    <el-link type="primary" href="/order.html" icon="el-icon-back" style="margin-top: 10px">返回订单列表</el-link>
+    <div class="app-order">
+      <div class="app-order-warpper text-4 text-general-1">
+
+        <div class="app-order-warpper-title">订单状态：{{order.statusDesc}}</div>
+        <!--						现在我的想法是将这个地方的订单状态改成像淘宝一样的，但是可以使用步骤条-->
+        <!--						<div class="app-order-warpper-title">-->
+        <!--							-->
+        <!--						</div>-->
+        <el-steps :active="order.status" simple>
+          <!--active : 当前的步骤-->
+          <!--finish-status : 已完成的步骤样式，可用slot取代属性的设置 -->
+          <!--可直接使用simple简单样式-->
+          <el-step title="拍下宝贝" icon="el-icon-s-order"></el-step>
+          <el-step title="交保护费" icon="el-icon-wallet"></el-step>
+          <el-step title="卖家发货" icon="el-icon-truck"></el-step>
+          <el-step title="确认收货" icon="el-icon-receiving"></el-step>
+          <el-step title="等待评价" icon="el-icon-s-comment"></el-step>
+        </el-steps>
+
+        <!--          显示订单简略信息的东西需要保留-->
+        <div class="app-order-grid  center m-b-20">
+          <div class="app-order-grid-row">
+            <div>商品</div>
+            <div>单价(元)</div>
+            <div>数量</div>
+            <div>商品总价</div>
+          </div>
+
+          <div class="app-order-grid-row app-order-grid-row-item" v-for="item in order.orderItems">
+
+            <div class="inline-grid">
+              <img :src=item.iconUrl width="60px" height="60px">
+              <div>{{item.commodityName}}</div>
+            </div>
+            <div>¥{{item.curPrice.toFixed(2)}}</div>
+            <div>{{item.quantity}}</div>
+            <div>¥{{item.totalPrice.toFixed(2)}}</div>
+          </div>
+        </div>
+
+        <!--						以下部分是订单评论功能-->
+        <el-divider></el-divider>
+        <div>
+          评论等级：
+          <el-rate
+                  v-model="comment_level"
+                  :colors="colors"
+                  show-text
+          style="display: inline">
+<!--            show-score: 显示目前分数-->
+<!--            使用diabled变为只读-->
+          </el-rate>
+          <el-input
+            type="textarea"
+            :rows="2"
+            placeholder="请输入评论内容"
+            v-model="comment_content"></el-input>
+          <el-button @click="go_comment()" type="primary" round>提交评论</el-button>
+        </div>
+
+
+      </div>
+    </div>
+  </user-frame>
+  <footer-image></footer-image>
+  <footer-link></footer-link>
+  <footer-bottom></footer-bottom>
+</div>
+
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./element-ui/index.js"></script>
+<script src="./components/min-width-container.js"></script>
+<script src="./components/footer-image.js"></script>
+<script src="./components/footer-bottom.js"></script>
+<script src="./components/footer-link.js"></script>
+<script src="./components/header-full.js"></script>
+<script src="./components/user-frame.js"></script>
+<script>
+  const app = new Vue({
+    el: "#app",
+    data(){
+      return {
+        orderNo: '',
+        order: {},
+        colors: ['#99A9BF', '#F7BA2A', '#FF9900'],
+        comment_level: null,//评论星级
+        texts: ['极差','失望','普通','较好','极好',],//lev_desc
+        comment_content: '',//评论内容
+      };
+    },
+    created(){
+      if(/^\?\d+$/.test(window.location.search)){
+        const query = window.location.search.trim();
+        //got orderNo
+        this.orderNo = query.substring(1, query.length);
+        //console.log(this.orderNo);
+
+        const params = new URLSearchParams();
+        params.append("orderNo", this.orderNo)
+        axios.post("/order/getdetail.do", params).then(response=> {
+          if (response.data.status === 0) {
+            this.order = response.data.data;
+
+          } else {
+            if (response.data.msg) {
+              console.log(response.data.msg);
+            }
+          }
+        }).catch(err=>{
+          console.log(err);
+        });
+      }else{
+        this.$message.error("非法的访问");
+      }
+    },
+    methods: {
+
+
+      go_comment(){
+        const params = new URLSearchParams();
+        params.append("orderNo", this.order.orderItems[0].orderId);
+        params.append("comment_level", this.comment_level);
+        params.append("comment_content", this.comment_content);
+        params.append("commodityNo", this.order.orderItems[0].commodityId);
+        axios.post("/comment/save_comment.do", params).then(response=>{
+          this.$message({
+            message : "评论成功！",
+            type : 'success'
+          })
+          clearTimeout(this.timer);  //清除延迟执行
+          this.timer = setTimeout(()=>{   //设置延迟执行
+            window.location = "/order.html"
+          },1000);
+
+        }).catch(err => {
+          this.$message("评论失败，请联系系统维护人员！")
+        })
+      }
+    }
+  });
+
+</script>
+</body>
+</html>
+

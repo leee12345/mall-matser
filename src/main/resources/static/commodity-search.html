@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>搜索 | 机械配件商城</title>
+		<link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+		<link rel="stylesheet" type="text/css" href="./css/common.css" />
+		<link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+		<link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+		<link rel="stylesheet" type="text/css" href="./components/footer-image.css" />
+		<link rel="stylesheet" type="text/css" href="./components/footer-link.css" />
+		<link rel="stylesheet" type="text/css" href="./components/header-full.css" />
+		<style>
+			.catagory{
+				display: flex;
+				flex-direction:column;
+				border: 1px solid #E2E1E1;
+			}
+
+
+
+			.catagory-left{
+				background: #F1F0F0;
+				padding: 30px;
+			}
+
+			.catagory-right{
+				display: flex;
+				flex-direction:column;
+				padding: 30px;
+			}
+
+			.catagory-right li{
+				display: inline-block;
+				margin-right: 10px;
+				cursor: pointer;
+			}
+
+			.catagory-right li.active{
+				background: #41B6E7;
+				color: white;
+				padding: 0 6px;
+				height: 32px;
+				line-height: 32px;
+			}
+
+			.commodities-commodity{
+				border: 1px solid transparent;
+				min-height: 280px;
+			}
+
+			.commodities-commodity:hover{
+				border: 1px solid #F1F0F0;
+			}
+
+			.commodities-commodity-image{
+				height: 180px;
+				background-repeat: no-repeat;
+				background-size: 100% 100%;
+			}
+
+			.commodities-commodity-price, .commodities-commodity-name{
+				line-height: 2;
+				padding: 0 16px;
+
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<header-full :bordered="true" :keyword="keyword" :on_search="search_hook"></header-full>
+			<min-width-container>
+				<div class="m-t-12 m-b-12">
+					<el-breadcrumb separator-class="el-icon-arrow-right">
+						<el-breadcrumb-item><span class="pointer"  @click="window.location.href='/'">首页</span></el-breadcrumb-item>
+						<el-breadcrumb-item>商品搜索</el-breadcrumb-item>
+					</el-breadcrumb>
+				</div>
+				<el-container>
+					<el-aside width="180px" >
+						<div class="catagory">
+							<div class="catagory-left text-4 text-important" style="font-weight: 900; width:180px;">
+								产品类型
+							</div>
+							<div class="catagory-right" style="width:160px;">
+								<ul class="text-4 text-general-1" >
+									<li :class="{active: selected_class == 0}" @click="selected_class = 0, search(keyword, selected_class)">全部</li>
+									<li v-for="cls, index in classes" :key="index" :class="{active: selected_class == cls.class_id}" @click="selected_class = cls.class_id, search(keyword, selected_class)">{{cls.name}}</li>
+								</ul>
+							</div>
+						</div>
+					</el-aside>
+
+
+					<el-main>
+						<div class="commodities m-t-20">
+							<el-row :gutter="12">
+								<el-col :span="4" class="m-b-16 pointer" v-for="item in products">
+									<div class="commodities-commodity" @click="go_detail(item.id)">
+										<div class="commodities-commodity-image" :style="{backgroundImage: 'url(' + item.iconUrl + ')'}"></div>
+										<div class="commodities-commodity-price text-1" style="font-weight: 800; color: #FF4400;">¥{{item.price.toFixed(2)}}</div>
+										<div class="commodities-commodity-name text-4 text-important omit" style="font-weight: 800;">
+											{{item.name}}
+										</div>
+									</div>
+								</el-col>
+							</el-row>
+						</div>
+						<div class="pagination center">
+							<el-pagination
+									background
+									layout="prev, pager, next"
+									:page-size = "page_size"
+									:total="count"
+									@current-change="page_change"
+							>
+							</el-pagination>
+						</div>
+					</el-main>
+					</el-container>
+			</min-width-container>
+			<footer-image></footer-image>
+			<footer-link></footer-link>
+			<footer-bottom></footer-bottom>
+		</div>
+		<script src="./js/vue.js"></script>
+		<script src="./js/axios.min.js"></script>
+		<script src="./element-ui/index.js"></script>
+		<script src="./components/min-width-container.js"></script>
+		<script src="./components/footer-image.js"></script>
+		<script src="./components/footer-bottom.js"></script>
+		<script src="./components/footer-link.js"></script>
+		<script src="./components/header-full.js"></script>
+		<script>
+		    const app = new Vue({
+		        el: "#app",
+		        data(){
+					return {
+						keyword: '',
+						classes: [],
+						selected_class: 0,
+						products: [],
+						count: 0,
+						page_size: 12
+					};
+		        },
+		        created(){
+		        	if(window.location.search !== ''){
+		        		const query =  decodeURI(window.location.search.trim());
+		        		this.keyword = query.substring(1, query.length);
+		        	}
+		        	this.load_classes();
+		        	this.search(this.keyword, this.selected_class);
+		        },
+		        methods: {
+		            go_detail(id){
+						window.location.href = "/commodity-detail.html?" + id;
+					},
+					search_hook(keyword){
+						this.keyword = keyword;
+						this.search(this.keyword, this.selected_class);
+					},
+					/*分页搜索商品*/
+					search(keyword, type, page_size, page_index){
+						if(page_size === undefined){
+							page_size = this.page_size;
+						}
+						if(page_index === undefined){
+							page_index = 0;
+						}
+						const params = new URLSearchParams();
+						params.append("keyword", keyword);
+						params.append("classId", type);
+						params.append("offset", page_index * page_size);
+						params.append("limit", page_size);
+						axios.post("/product/searchproducts.do", params).then(response=>{
+							if(response.data.status === 0){
+								this.products = response.data.data.lists;
+								this.count = response.data.data.count;
+							}else{
+								if(response.data.msg){
+									this.$message.error(response.data.msg);
+								}
+							}
+						}).catch(err=>{
+							console.log(err);
+							this.$message.error("连接服务器异常");
+						});
+					},
+					/* 加载类型列表 */
+					load_classes(){
+						/*获取类型列表*/
+						axios.post("/param/findallparams.do").then(response=>{
+							if(response.data.status === 0){
+								this.classes = response.data.data;
+							}else{
+								console.log(response.data.msg);
+							}
+						}).catch(err=>{
+							console.log(err);
+						});
+					},
+					page_change(page){
+						this.search(this.keyword, this.selected_class, this.page_size,  page - 1);
+					}
+		        }
+		    });
+
+		</script>
+	</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>收货地址 | 机械配件商城</title>
+    <link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="./css/common.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/footer-image.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/footer-link.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/header-full.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/user-frame.css"/>
+    <style>
+        .app-title {
+            border-bottom: 1px solid #EEEEEE;
+            line-height: 2;
+            font-weight: 900;
+        }
+
+        .app-subtitle {
+            color: red;
+            padding: 20px;
+            padding-left: 40px;
+        }
+
+        .app-form-wapper {
+            width: 620px;
+        }
+
+        .app-form-wapper .el-form--inline .el-input {
+            width: 93px;
+        }
+
+        .app-table, .app-form {
+            padding: 0 40px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header-full :bordered="true"></header-full>
+    <user-frame class="m-t-20">
+        <div class="app-title text-2 text-important">收货地址管理</div>
+        <div class="app-subtitle text-4">
+            <span v-if="addr_id == ''">添加收货地址</span>
+            <span v-else>编辑收货地址</span>
+        </div>
+        <div class="app-form">
+            <div class="app-form-wapper">
+                <el-form :inline="false" :model="form" label-width="120px">
+                    <el-form-item label="请选择地区:">
+                        <el-cascader v-model="selectedOptions" :options="options" :props="{ expandTrigger: 'hover' }"></el-cascader>
+                    </el-form-item>
+                </el-form>
+                <el-form ref="form" :model="form" :rules="rules2" label-width="120px">
+                    <el-form-item label="详细地址:" prop="addr">
+                        <el-input size="mini" v-model="form.addr" placeholder="请输入详细的地址信息,如小区/街道/门牌号/单元等"></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮编:">
+                        <el-input size="mini" v-model="form.zip" placeholder="请填写邮编"></el-input>
+                    </el-form-item>
+                    <el-form-item label="收货人:" prop="name">
+                        <el-input size="mini" v-model="form.name" placeholder="请输入收货人姓名,长度不超过20"></el-input>
+                    </el-form-item>
+                    <el-form-item label="手机号码:" prop="mobile">
+                        <el-input size="mini" v-model="form.mobile" placeholder="请输入13位手机号码"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button v-if="addr_id == ''" type="primary" @click="add_address">添加</el-button>
+                        <el-button v-else type="primary" size="mini" @click="update_address()">保存</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+        <div class="app-table">
+            <el-table
+                    border
+                    stripe
+                    :data="tableData"
+                    style="width: 1200px">
+                <el-table-column
+                        fixed="left"
+                        prop="name"
+                        label="收货人"
+                        width="80">
+                </el-table-column>
+                <el-table-column
+                        label="所在地区"
+                        width="160">
+                    <template slot-scope="scope">
+                        {{scope.row.province}} {{scope.row.city}} {{scope.row.district}}
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        prop="addr"
+                        label="详细地址"
+                        width="300">
+                </el-table-column>
+                <el-table-column
+                        prop="zip"
+                        label="邮编"
+                        width="80">
+                </el-table-column>
+                <el-table-column
+                        prop="mobile"
+                        label="手机号"
+                        width="120">
+                </el-table-column>
+                <el-table-column
+                        fixed="right"
+                        label="操作"
+                        width="180">
+                    <template slot-scope="scope">
+                        <el-button
+                                size="mini"
+                                @click="pre_update(scope.row)">编辑
+                        </el-button>
+                        <el-button
+                                size="mini"
+                                type="danger"
+                                @click="remove_address(scope.row.id)">删除
+                        </el-button>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        label=""
+                        width="120">
+                    <template slot-scope="scope">
+                        <div v-if="scope.row.deFault == 1" class="center"
+                             style="border: 1px solid #FD9E77; color: #FD9E77; background: #FED5CB; widht:84px; height: 34px; border-radius: 3px; line-height: 34px;">
+                            默认地址
+                        </div>
+                        <div v-else class="text-4 text-general-1 pointer" @click="set_default_addr(scope.row.id)">设为默认
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+    </user-frame>
+    <footer-image></footer-image>
+    <footer-link></footer-link>
+    <footer-bottom></footer-bottom>
+</div>
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./element-ui/index.js"></script>
+<script src="./components/min-width-container.js"></script>
+<script src="./components/footer-image.js"></script>
+<script src="./components/footer-bottom.js"></script>
+<script src="./components/footer-link.js"></script>
+<script src="./components/header-full.js"></script>
+<script src="./components/user-frame.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data() {
+            return {
+                addr_id: '',
+                form: {
+                    addr: '',
+                    zip: '',
+                    name: '',
+                    mobile: ''
+                },
+                options: [],
+                selectedOptions: [],
+                rules2: {
+                    addr: [
+                        {required: true, message: '请输入', trigger: 'blur'},
+                        {min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur'}
+                    ],
+                    name: [
+                        {required: true, message: '请输入', trigger: 'blur'},
+                        {min: 1, max: 5, message: '长度在 1 到 5 个字符', trigger: 'blur'}
+                    ],
+                    mobile: [
+                        {required: true, message: '请输入', trigger: 'blur'},
+                        {min: 11, max: 11, message: '长度在 11 到 11 个字符', trigger: 'blur'}
+                    ]
+                },
+                tableData: []
+            };
+        },
+        created() {
+            /* 加载现有地址 */
+            axios.post("/addr/findaddrs.do").then(response => {
+                if (response.data.status === 0) {
+                    this.tableData = response.data.data;
+                } else {
+                    this.$message.error(response.data.msg);
+                }
+            }).catch(err => {
+                console.log(err);
+            });
+
+            /* 加载联动地址配置 */
+            axios.get("/districts.json").then(response => {
+                this.options = this.json2options(response.data);
+            }).catch(err => {
+                console.log(err);
+            })
+        },
+        methods: {
+            /*设置默认的收货地址*/
+            set_default_addr(addr_id) {
+                const params = new URLSearchParams();
+                params.append("id", addr_id);
+                axios.post("/addr/setdefault.do", params).then(response => {
+                    if (response.data.status === 0) {
+                        window.location.reload();
+                    } else {
+                        this.$message.error(response.data.msg);
+                    }
+                }).catch(err => {
+                    this.$message.error("连接服务器失败");
+                });
+
+            },
+            /*添加一个新的地址*/
+            add_address() {
+                this.$refs.form.validate((valid) => {
+                    if (valid && this.selectedOptions.length === 3) {
+                        const params = new URLSearchParams();
+                        params.append("name", this.form.name);
+                        params.append("mobile", this.form.mobile);
+                        params.append("province", this.selectedOptions[0]);
+                        params.append("city", this.selectedOptions[1]);
+                        params.append("district", this.selectedOptions[2]);
+                        params.append("addr", this.form.addr);
+                        params.append("zip", this.form.zip);
+                        axios.post("/addr/saveaddr.do", params).then(response => {
+                            if (response.data.status === 0) {
+                                this.$message({
+                                    message: "添加成功",
+                                    type: "success"
+                                });
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1000);
+                            } else {
+                                this.$message.error(response.data.msg);
+                            }
+                        }).catch(err => {
+                            this.$message.error("连接服务器失败");
+                        });
+                    }
+                    else if(this.selectedOptions.length < 3){
+                        this.$message.error("请选择地区")
+                    }
+                });
+
+            },
+
+            /*进入更新步骤*/
+            pre_update(row){
+                this.addr_id=row.id;
+                this.form.addr=row.addr;
+                this.form.zip=row.zip;
+                this.form.name=row.name;
+                this.form.mobile=row.mobile;
+
+            },
+            /*更新一个地址*/
+            update_address() {
+                this.$refs.form.validate((valid) => {
+                    if (valid && this.selectedOptions.length === 3) {
+                        const params = new URLSearchParams();
+                        params.append("id", this.addr_id);
+                        params.append("name", this.form.name);
+                        params.append("mobile", this.form.mobile);
+                        params.append("province", this.selectedOptions[0]);
+                        params.append("city", this.selectedOptions[1]);
+                        params.append("district", this.selectedOptions[2]);
+                        params.append("addr", this.form.addr);
+                        params.append("zip", this.form.zip);
+                        axios.post("/addr/updateaddr.do", params).then(response => {
+                            if (response.data.status === 0) {
+                                this.$message({
+                                    message: "更新成功",
+                                    type: "success"
+                                });
+                                this.addr_id='';
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1000);
+                            } else {
+                                this.$message.error(response.data.msg);
+                            }
+                        }).catch(err => {
+                            this.$message.error("连接服务器失败");
+                        });
+                    }
+                    else if(this.selectedOptions.length < 3){
+                        this.$message.error("请选择地区")
+                    }
+                });
+
+            },
+            /*删除一个地址*/
+            remove_address(addr_id) {
+                this.$confirm('此操作将永久删除此地址, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    const params = new URLSearchParams();
+                    params.append("id", addr_id);
+                    axios.post("/addr/deladdr.do", params).then(response => {
+                        if (response.data.status === 0) {
+                            window.location.reload();
+                        } else {
+                            this.$message.error(response.data.msg);
+                        }
+                    }).catch(err => {
+                        this.$message.error("连接服务器失败");
+                    });
+                }).catch(() => {
+                    console.log("用户取消删除");
+                });
+            },
+            json2options(json) {
+                let provinces = [];
+                //遍历每个省
+                for (let key in json['100000']) {
+                    let name = json['100000'][key];
+                    let province = {label: name, value: name, children: []};
+                    provinces.push(province);
+                    //遍历每个市
+                    for (let key2 in json[key]) {
+                        let name = json[key][key2];
+                        let city = {label: name, value: name, children: []};
+                        province.children.push(city);
+                        //遍历每个县
+                        for (let key3 in json[key2]) {
+                            let name = json[key2][key3];
+                            let district = {label: name, value: name};
+                            city.children.push(district);
+                        }
+                    }
+                }
+                return provinces;
+            }
+        }
+    });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>类型管理 | 后台管理 </title>
+    <link rel="stylesheet" type="text/css" href="./../element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="./../css/common.css" />
+	<link rel="stylesheet" type="text/css" href="../components/admin-frame.css" />
+    <link rel="stylesheet" type="text/css" href="./../components/min-width-container.css"/>
+	<style>
+        #app{
+        	height: 100%;
+        }
+
+
+        .type-add{
+			text-align: right;
+			padding: 8px 0;
+        }
+
+		#app .el-button--primary{
+			background-color: #3C8DBC;
+			border-color: #3C8DBC;
+		}
+    </style>
+</head>
+<body>
+<div id="app">
+	<admin-frame  active="2" title="类型参数管理">
+		<min-width-container>
+		    <div class="m-t-8 m-b-8">
+		        <div class="app-title text-2 text-important">类型参数列表</div>
+		    </div>
+		    <div class="type-add">
+		        <el-button type="primary" size="mini" @click="open_dialog_new">新增类型参数</el-button>
+		    </div>
+		    <div>
+		        <template>
+		            <el-table
+		                    :data="tableData"
+		                    border>
+		                <el-table-column
+		                        fixed
+		                        prop="id"
+		                        label="编号"
+		                        width="300">
+		                </el-table-column>
+		                <el-table-column
+		                        prop="name"
+		                        label="类型名称"
+		                        width="300">
+		                </el-table-column>
+		                <el-table-column
+
+		                        label="操作">
+		                    <template slot-scope="scope">
+								<el-button type="primary" icon="el-icon-edit"  @click="open_dialog_edit(scope.row)"></el-button>
+								<el-button type="danger" icon="el-icon-delete" @click="remove(scope.row)"></el-button>
+		                    </template>
+		                </el-table-column>
+		            </el-table>
+		        </template>
+		    </div>
+
+		</min-width-container>
+	</admin-frame>
+	<el-dialog title="类型参数" :visible.sync="dialogFormVisible">
+		<el-form :model="dialogFormItem">
+			<el-form-item label="名称" :label-width="formLabelWidth">
+				<el-input v-model="dialogFormItem.name" autocomplete="off"></el-input>
+			</el-form-item>
+		</el-form>
+		<div slot="footer" class="dialog-footer">
+			<el-button @click="dialogFormVisible = false" size="mini">取 消</el-button>
+			<el-button type="primary" @click="save"  size="mini">确 定</el-button>
+		</div>
+	</el-dialog>
+</div>
+<script src="./../js/vue.js"></script>
+<script src="./../js/axios.min.js"></script>
+<script src="./../element-ui/index.js"></script>
+<script src="../components/admin-frame.js"></script>
+<script src="./../components/min-width-container.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data(){
+            return {
+                tableData: [],
+                dialogTableVisible: false,
+                dialogFormVisible: false,
+                dialogFormItem: {
+                	name: ''
+                },
+                formLabelWidth: '120px'
+            };
+        },
+        created(){
+        	this.load_classes();
+        },
+        methods: {
+        	/*加载所有类型*/
+        	load_classes(){
+        		axios.post("/mgr/param/findptype.do").then(response=>{
+					if(response.data.status === 0){
+						this.tableData = response.data.data;
+					}else{
+						if(response.data.msg){
+							console.log(response.data.msg);
+						}
+					}
+				}).catch(err=>{
+					console.log(err);
+				});
+        	},
+        	/* 打开新增窗口  */
+        	open_dialog_new(){
+        		this.dialogFormItem = {name: '' };
+				this.dialogFormVisible = true;
+        	},
+        	/* 打开编辑窗口 */
+        	open_dialog_edit(item){
+				this.dialogFormItem = item;
+				this.dialogFormVisible = true;
+        	},
+        	/* 远程新增或更新类型 */
+        	save(){
+        		if(this.dialogFormItem.id === undefined){
+        			//console.log("新增:", this.dialogFormItem.name);
+        			const params = new URLSearchParams();
+        			params.append("parent_id", 0);
+        			params.append("name", this.dialogFormItem.name);
+        			axios.post("/mgr/param/saveparam.do", params).then(response=>{
+        				if(response.data.status === 0){
+        					this.$message({
+								message: "添加成功",
+								type: "success"
+							});
+							this.dialogFormVisible = false;
+							this.load_classes();
+        				}else{
+        					if(response.data.msg){
+        						console.log(response.data.msg);
+        						this.$message.error(response.data.msg);
+        					}
+        				}
+        			}).catch(err=>{
+        				console.log(err);
+        				this.$message.error("连接服务器异常");
+        			});
+        		}else{
+        			//console.log("更新:",this.dialogFormItem.id, this.dialogFormItem.name);
+        			const params = new URLSearchParams();
+        			params.append("id", this.dialogFormItem.id);
+        			params.append("name", this.dialogFormItem.name);
+        			axios.post("/mgr/param/updateparam.do", params).then(response=>{
+        				if(response.data.status === 0){
+        					this.$message({
+								message: "更新成功",
+								type: "success"
+							});
+							this.dialogFormVisible = false;
+        				}else{
+        					if(response.data.msg){
+        						console.log(response.data.msg);
+        						this.$message.error(response.data.msg);
+        					}
+        				}
+        			}).catch(err=>{
+        				console.log(err);
+        				this.$message.error("连接服务器异常");
+        			});
+        		}
+        	},
+        	/* 远程删除类型 */
+        	remove(item){
+        		this.$confirm('确实删除此项吗?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning'
+				}).then(() => {
+					const params = new URLSearchParams();
+					params.append("id", item.id);
+					axios.post("/mgr/param/delparam.do", params).then(response=>{
+						if(response.data.status === 0){
+							this.$message({
+								message: "删除成功",
+								type: "success"
+							});
+							this.load_classes();
+						}else{
+							if(response.data.msg){
+								console.log(response.data.msg);
+								this.$message.error(response.data.msg);
+							}
+						}
+					}).catch(err=>{
+						console.log(err);
+						this.$message.error("连接服务器异常");
+					});
+				}).catch(() => { });
+        	}
+        },
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.footer-bottom{
+	background-color: #F2F2F2;
+	border-top: 1px solid #E4E4E4;
+}
+
+.footer-bottom-p{
+	height: 65px;
+	line-height: 65px;
+}

@@ -1,0 +1,12 @@
+.min-width-container1{
+	background-size: cover;
+	background-image: url("../images/loginbackground.png");
+}
+
+.min-width-container-child1{
+	margin-top: 100px;
+	margin-bottom: 100px;
+	width: auto;
+	margin: auto;
+
+}

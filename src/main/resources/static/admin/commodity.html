@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>商品管理 | 后台管理 </title>
+    <link rel="stylesheet" type="text/css" href="./../element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="./../css/common.css" />
+	<link rel="stylesheet" type="text/css" href="../components/admin-frame.css" />
+    <link rel="stylesheet" type="text/css" href="./../components/min-width-container.css"/>
+    <style>
+		#app{
+			height: 100%;
+		}
+
+		.app-search{
+			display: flex;
+			align-items: center;
+			height:65px;
+		}
+
+		#app .el-button--primary{
+			background-color: #3C8DBC;
+			border-color: #3C8DBC;
+		}
+
+    </style>
+</head>
+<body>
+<div id="app">
+	<admin-frame active="1" title="商品管理">
+		<min-width-container>
+		    <div class="m-t-8 m-b-8">
+		        <div class="app-title text-2 text-important">商品列表</div>
+		    </div>
+		    <div class="app-search">
+
+		        <div class="bold m-r-20">商品编号:</div>
+				<div><el-input v-model="search_content" placeholder="请输入商品编号" style="width: 150px;"></el-input></div>
+<!--				<div class="m-l-16"><el-button type="primary" size="mini" @click="search">查询</el-button></div>-->
+
+				<div class="bold m-r-20">商品名称</div>
+				<div><el-input v-model="search_name" placeholder="请输入商品名称" style="width: 150px;"></el-input></div>
+				<div class="bold m-r-20">商品类别</div>
+				<div>
+					<template>
+						<el-select v-model="search_cls" placeholder="请选择商品类别">
+							<el-option
+									v-for="item in classlist"
+									:key="item.id"
+									:label="item.name"
+									:value="item.id"
+							></el-option>
+						</el-select>
+					</template>
+				</div>
+				<div class="m-l-16"><el-button type="primary" size="mini" @click="searchnameandcls">查询</el-button></div>
+				<div class="m-l-16"><el-button type="success" size="mini" @click="reset">重置</el-button></div>
+				<div style="flex-grow: 1;"></div>
+				<div><el-button  type="primary" size="mini" @click="commodity_add">新增商品</el-button></div>
+		    </div>
+			<div>
+				<template>
+					<el-table
+							:data="commodities"
+							border
+							ref="filterTable"
+							style="width: 100%">
+						<el-table-column
+								fixed
+								prop="id"
+								label="编号"
+								width="150"
+								sortable>
+						</el-table-column>
+						<el-table-column
+								prop="name"
+								label="商品名称"
+								width="200">
+						</el-table-column>
+						<el-table-column
+								prop="classname"
+								label="商品类别">
+						</el-table-column>
+						<el-table-column
+								prop="stock"
+								label="库存"
+								sortable>
+						</el-table-column>
+						<el-table-column
+								prop="price"
+								label="价格"
+								width="120"
+								sortable>
+						</el-table-column>
+						<el-table-column
+								label="是否上架"
+								width="120">
+								<template slot-scope="scope">
+									<el-switch
+									  v-model="scope.row.isUp"
+									  active-color="#13ce66"
+									  inactive-color="#ff4949"
+									  @change="set_status(scope.row, !scope.isUp, scope.isHot)">
+									</el-switch>
+								</template>
+						</el-table-column>
+						<el-table-column
+								label="是否热销"
+								width="120">
+								<template slot-scope="scope">
+									<el-switch
+									  v-model="scope.row.isHot"
+									  active-color="#13ce66"
+									  inactive-color="#ff4949"
+									  @change="set_status(scope.row, scope.isUp, !scope.isHot)">
+									</el-switch>
+								</template>
+						</el-table-column>
+						<el-table-column
+								fixed="right"
+								label="操作"
+								width="100">
+							<template slot-scope="scope">
+								<el-button type="text" size="small" @click="window.location.href = '/admin/commodity-new.html?' + scope.row.id ">编辑</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</template>
+			</div>
+			<div class="pagination center">
+				<el-pagination
+						background
+						layout="prev, pager, next"
+						:page-size = "page_size"
+						:total="count"
+						@current-change="page_change"
+				>
+				</el-pagination>
+			</div>
+		    <div class="app-tabs  m-t-20 m-b-20">
+
+		    </div>
+
+		</min-width-container>
+	</admin-frame>
+</div>
+<script src="./../js/vue.js"></script>
+<script src="./../js/axios.min.js"></script>
+<script src="./../element-ui/index.js"></script>
+<script src="../components/admin-frame.js"></script>
+<script src="./../components/min-width-container.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data(){
+            return {
+                commodities: [],
+				classlist:[],
+				search_content:'',
+				search_name:'',
+				search_cls:'',
+				page_size: 20,
+				count:0,
+            };
+        },
+        created(){
+			this.load_commodities('',this.page_size,0);
+			this.load_class();
+        },
+        methods: {
+            // search(page_size,page_index){
+			// 	if(page_index === undefined){
+			// 		page_index = 0;
+			// 	}
+            // 	if(/^\d+$/.test(this.search_content)){
+            // 		this.load_commodities(this.search_content,this.page_size ,page_index);
+            // 	}else if(this.search_content.trim() === ''){
+            // 		this.load_commodities('',this.page_size, page_index);
+            // 	}else{
+            // 		this.$message.error("请输入正确的商品编号");
+            // 	}
+            // },
+			searchnameandcls(page_size,page_index){
+				if(page_index === undefined){
+					page_index = 0;
+				}
+
+				this.load_commodities_byclsname(this.search_content,this.search_name,this.search_cls,this.page_size,page_index);
+
+			},
+            commodity_add(){
+                window.location.href = "/admin/commodity-new.html";
+            },
+			load_class(){
+				axios.post("/mgr/product/classlist.do").then(response=>{
+					if(response.data.status === 0){
+						if(!Array.isArray(response.data.data)){
+							response.data.data = [response.data.data];
+						}
+						this.classlist = response.data.data;
+						console.log(response.data.data);
+					}else{
+						if(response.data.msg){
+							console.log(response.data.msg);
+							this.$message.error(response.data.msg);
+						}
+					}
+				}).catch(err=>{
+					console.log(err);
+				});
+			},
+			load_commodities(id,page_size, page_index){
+				const params = new URLSearchParams();
+				console.log("id"+id)
+				console.log(page_index * page_size)
+				console.log(page_size)
+				params.append("id", id);
+				params.append("offset", page_index * page_size);
+				params.append("limit", page_size);
+				axios.post("/mgr/product/productlist.do", params).then(response=>{
+					if(response.data.status === 0){
+						for(let commodity of response.data.data.lists){
+							commodity.isUp = commodity.status === 1;
+							commodity.isHot = commodity.isHot === 1;
+						}
+						this.commodities = response.data.data.lists;
+						this.count = response.data.data.count;
+						console.log(response.data.data.lists);
+						console.log(response.data.data.count);
+					}else{
+						if(response.data.msg){
+							console.log(response.data.msg);
+							this.$message.error(response.data.msg);
+						}
+					}
+				}).catch(err=>{
+					console.log(err);
+				});
+			},
+
+			load_commodities_byclsname(id,name,cls,page_size, page_index){
+				const params = new URLSearchParams();
+				params.append("id", id);
+				params.append("name", name);
+				params.append("cls", cls);
+				params.append("offset", page_index * page_size);
+				params.append("limit", page_size);
+				axios.post("/mgr/product/productlistbyclsname.do", params).then(response=>{
+					if(response.data.status === 0){
+						for(let commodity of response.data.data.lists){
+							commodity.isUp = commodity.status === 1;
+							commodity.isHot = commodity.isHot === 1;
+						}
+						this.commodities = response.data.data.lists
+						this.count = response.data.data.count;
+						console.log(response.data.data.lists);
+						console.log(response.data.data.count);
+					}else{
+						if(response.data.msg){
+							console.log(response.data.msg);
+							this.$message.error(response.data.msg);
+						}
+					}
+				}).catch(err=>{
+					console.log(err);
+				});
+			},
+			page_change(page){
+				this.searchnameandcls(this.page_size,page - 1);
+				// this.search(this.keyword, this.selected_class, this.page_size,  page - 1);
+			},
+			reset(){
+				this.search_content='';
+				this.search_name='';
+				this.search_cls='';
+            	this.load_commodities('',this.page_size,0);
+
+			},
+			set_status(item, isUpOld, isHotOld){
+				const params = new URLSearchParams();
+				params.append("productId", item.id);
+				params.append("status", item.isUp ? 1 : 0);
+				params.append("hot", item.isHot ? 1 : 0);
+				axios.post("/mgr/product/setstatus.do", params).then(response=>{
+					if(response.data.status === 0){
+						this.$message({
+							message: "设置成功",
+							type: "success"
+						});
+					}else{
+						if(response.data.msg){
+							this.$message.error(response.data.msg);
+						}
+						item.isUp = isUpOld;
+						item.isHot = isHotOld;
+					}
+				}).catch(err=>{
+					console.log(err);
+					this.$message.error("连接服务器异常");
+					item.isUp = isUpOld;
+					item.isHot = isHotOld;
+				})
+			}
+        },
+		filterHandler(value, row, column) {
+			const property = column['property'];
+			return row[property] === value;
+		},
+    });
+</script>
+</body>
+</html>

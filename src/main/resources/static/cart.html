@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>购物车 | 机械配件商城</title>
+		<link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+		<link rel="stylesheet" type="text/css" href="./css/common.css" />
+		<link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+		<link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+		<link rel="stylesheet" type="text/css" href="./components/footer-image.css" />
+		<link rel="stylesheet" type="text/css" href="./components/footer-link.css" />
+		<link rel="stylesheet" type="text/css" href="./components/header-full.css" />
+		<link rel="stylesheet" type="text/css" href="./components/cart-frame.css" />
+		<style>
+			.app-title{
+				line-height: 2;
+				font-weight: 900;
+			}
+			
+			.app-header{
+				display: grid;
+				width: 100%;
+				grid-template-columns: 50px 1fr 200px 200px 200px 100px;
+				border-top: 3px solid #40B4E6;
+				background: #F2F2F2;
+			}
+			
+			.app-header > div{
+				line-height: 2.2;
+			}
+			
+			.app-item{
+				display: grid;
+				width: 100%;
+				grid-template-columns: 50px 1fr 200px 200px 200px 100px;
+				grid-template-rows: 80px;
+				border-left: 1px solid #F2F2F2;
+				border-top: 1px solid #F2F2F2;
+			}
+
+			.disablediv{
+				background: #e1e1e1;
+			}
+			
+			.app-item > div{
+				border-bottom: 1px solid #F2F2F2;
+				border-right: 1px solid #F2F2F2;
+				line-height: 78px;
+			}
+			
+			.app-item  .el-input-number__decrease, .app-item  .el-input-number__increase{
+				height: 26px;
+				line-height: 26px;
+			} 
+			
+			.app-counter{
+				display: flex;
+				height: 55px;
+				line-height: 55px;
+				align-items: center;
+				background: #F2F2F2;
+				margin-top: 30px;
+			}
+			
+			.app-counter *{
+				vertical-align: middle;
+			}
+			
+			.app-counter-clear{
+				flex-grow: 1;
+				margin-left: 40px;
+			}
+			
+			.app-counter-price{
+				margin: 0 30px;
+			}
+			
+			.app-counter-submit{
+				align-self: stretch;
+				width: 128px;
+				background: #F6660E;
+				line-height: 55px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<header-full :bordered="true"></header-full>
+
+<!--			这里的内容应该是放在slot中的，但是我现在疑惑的是它的布局为什么是这样的-->
+			<cart-frame class="m-t-20">
+<!--				匿名插槽，内容被注入slot中-->
+<!--				插槽内容显示在flex布局的右侧-->
+				<div class="app-title">
+					商品信息
+				</div>
+				<div class="app-header center text-4 text-general-1">
+					<div>选择</div>
+					<div>商品</div>
+					<div>单价（元）</div>
+					<div>数量</div>
+					<div>实付（元）</div>
+					<div>操作</div>
+				</div>
+				<div class="app-item center text-4 text-general-1 m-t-20" v-for="item in cart.lists">
+					<div><input type="checkbox" name="foo" @change="change_price"></div>
+					<div><img :src=item.iconUrl width="70px" height="70px">{{item.name}}</div>
+					<div>¥{{item.price.toFixed(2)}}</div>
+					<div><el-input-number v-model="item.quantity" :min="1" :max="item.stock" size="mini" @change="change_num(item.productId, $event)"></el-input-number></div>
+					<div>¥{{ (item.totalPrice).toFixed(2)}}</div>
+					<div class="pointer" @click="remove_cart_item(item.productId)">删除</div>
+				</div>
+				<div class="app-item center text-4 text-general-1 m-t-20 disablediv" v-for="item in cartno.lists">
+					<div @click="cantbuy"><input type="checkbox"  @click="cantbuy" disabled></div>
+					<div><img :src=item.iconUrl width="70px" height="70px">{{item.name}}</div>
+					<div>¥{{item.price.toFixed(2)}}</div>
+					<div><el-input-number v-model="item.quantity" :min="1" :max="10" size="mini" @change="change_num(item.productId, $event)"></el-input-number></div>
+					<div>¥{{ (item.totalPrice).toFixed(2)}}</div>
+					<div class="pointer" @click="remove_cart_item(item.productId)">删除</div>
+				</div>
+				<div class="app-counter text-4 text-general-1">
+					<div class="app-counter-clear pointer"><span class="pointer" @click="clear_cart">清空购物车</span></div>
+					<div class="app-counter-all"><span class="pointer" @click="all_cart()">全选</span></div>
+					<div class="app-counter-price">商品总金额: <span class="text-1 m-l-8" style="font-weight: 900; color: #F65D03;">¥{{parseFloat(allPrice).toFixed(2)}}</span></div>
+					<div class="app-counter-submit pointer center text-weak-4" @click="go_buy">提交订单</div>
+				</div>
+			</cart-frame>
+
+			<footer-image></footer-image>
+			<footer-link></footer-link>
+			<footer-bottom></footer-bottom>
+		</div>
+		<script src="./js/vue.js"></script>
+		<script src="./js/axios.min.js"></script>
+		<script src="./element-ui/index.js"></script>
+		<script src="./components/min-width-container.js"></script>
+		<script src="./components/footer-image.js"></script>
+		<script src="./components/footer-bottom.js"></script>
+		<script src="./components/footer-link.js"></script>
+		<script src="./components/header-full.js"></script>
+		<script src="./components/cart-frame.js"></script>
+		<script>
+		    const app = new Vue({
+		        el: "#app",
+		        data(){
+					return {
+						cart: {
+							lists: [],
+							totalPrice: 0
+						},
+						cartno: {
+							lists: [],
+							totalPrice: 0
+						},
+						allPrice: 0,
+
+						buy_list: {
+							lists: [],
+							totalPrice: 0,
+						},//选择的商品会被添加到这里面来,但是为了和前面保持一致，应使用相同的结构
+					};
+
+		        },
+		        created(){
+					this.load_cart();
+		        },
+		        methods: {
+					/*跳转到提交订单的页面*/
+					go_buy() {
+						if (this.buy_list.lists.length === 0) {
+							this.$message.error("请添加商品后再提交订单");
+							return;
+						}
+
+						if (this.buy_list.lists.length > 1) {
+							this.$message.warning("抱歉，因为订单模块设定的原因，暂时只能接受包含一件商品的订单，给您带来了不便，十分抱歉！");
+						} else {
+							//现在不应该清空购物车了，应该只删相应的商品
+							const params = new URLSearchParams();
+							this.$message.warning("" + this.buy_list.lists[0].productId);
+							params.append("productId", this.buy_list.lists[0].productId);
+							axios.post("/cart/delcarts.do", params).then(response => {
+								if (response.data.status === 0) {
+									// this.$message({
+									// 	message: "删除成功",
+									// 	type: "success"
+									// });
+									console.log("删除成功")
+									setTimeout(() => {
+										window.location.reload();
+									}, 2000);
+								} else {
+									this.$message.error(response.data.msg);
+									console.log(response.data.msg)
+								}
+							}).catch(err => {
+								this.$message.error("连接服务器异常");
+							});
+							sessionStorage.setItem("cart", JSON.stringify(this.buy_list));
+							window.location.href = "/submit-order.html";
+						}
+					},
+					/*获取购物车中商品信息*/
+					load_cart() {
+						//加载有效商品
+						axios.post("/cart/findallcarts.do").then(response => {
+							if (response.data.status === 0) {
+								this.cart = response.data.data;
+								console.log(this.cart);
+							} else {
+								console.log(response.data.msg);
+							}
+						}).catch(err=>{
+							console.log(err);
+						});
+						axios.post("/cart/findallcartnos.do").then(response=>{
+							if(response.data.status === 0){
+								this.cartno = response.data.data;
+								console.log(this.cart);
+							} else {
+								console.log(response.data.msg);
+							}
+						}).catch(err => {
+							console.log(err);
+						});
+					},
+					/*全选购物车商品*/
+					all_cart() {
+						console.log("all_cart");
+						checkboxes = document.getElementsByName('foo');
+						//重新初始化
+						this.buy_list.lists = [];
+						this.buy_list.totalPrice = 0;
+						this.cart.totalPrice = 0;
+						for (var i = 0; i < checkboxes.length; i++) {
+							checkboxes[i].checked = true;
+							this.buy_list.lists.push(this.cart.lists[i])
+							this.buy_list.totalPrice += this.cart.lists[i].totalPrice
+							this.cart.totalPrice += this.cart.lists[i].totalPrice
+						}
+						this.allPrice = this.cart.totalPrice;//更新结算金额显示
+
+					},
+					change_price() {
+						this.buy_list.lists = [];
+						this.buy_list.totalPrice = 0;
+						this.cart.totalPrice = 0;
+						checkboxes = document.getElementsByName('foo');
+						for (var i = 0; i < checkboxes.length; i++) {
+							if (checkboxes[i].checked) {
+								this.buy_list.lists.push(this.cart.lists[i])
+								this.cart.totalPrice += this.cart.lists[i].totalPrice
+								this.buy_list.totalPrice += this.cart.lists[i].totalPrice
+							}
+						}
+						//显示效果
+						this.allPrice = this.cart.totalPrice;
+					},
+					/*改变商品数量*/
+					change_num(product_id, num) {
+						const params = new URLSearchParams();
+						params.append("productId", product_id);
+						params.append("count", num);
+						axios.post("/cart/updatecarts.do", params).then(response => {
+							if (response.data.status === 0) {
+								this.load_cart();
+							} else {
+								this.$message.error(response.data.msg);
+							}
+						}).catch(err=>{
+							this.$message.error("连接服务器异常");
+						});
+					},
+					/*清空购物车*/
+					clear_cart(){
+						this.$confirm('确实清空购物车吗?', '提示', {
+						    confirmButtonText: '确定',
+						    cancelButtonText: '取消',
+						    type: 'warning'
+						}).then(() => {
+						    axios.post("/cart/clearcarts.do").then(response=>{
+								if(response.data.status === 0){
+									this.$message({
+										message: "清空成功",
+										type: "success"
+									});
+									setTimeout(()=>{
+										window.location.reload();
+									}, 2000);
+								}else{
+									this.$message.error(response.data.msg);
+								}
+							}).catch(err=>{
+								this.$message.error("连接服务器异常");
+							});
+						}).catch(() => { });
+					},
+					/*删除商品项*/
+					remove_cart_item(item_id){
+						this.$confirm('确实清删除此项吗?', '提示', {
+						    confirmButtonText: '确定',
+						    cancelButtonText: '取消',
+						    type: 'warning'
+						}).then(() => {
+							const params = new URLSearchParams();
+							params.append("productId", item_id);
+						    axios.post("/cart/delcarts.do", params).then(response=>{
+								if(response.data.status === 0){
+									this.$message({
+										message: "删除成功",
+										type: "success"
+									});
+									setTimeout(()=>{
+										window.location.reload();
+									}, 2000);
+								}else{
+									this.$message.error(response.data.msg);
+								}
+							}).catch(err=>{
+								this.$message.error("连接服务器异常");
+							});
+						}).catch(() => { });
+					},
+					cantbuy(){
+						this.$message.error("商品已失效，不可购买！");
+					}
+				}
+		    });
+			
+		</script>
+	</body>
+</html>

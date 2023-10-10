@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>首页 | 机械配件商城</title>
+    <link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+	<link rel="stylesheet" type="text/css" href="./css/common.css" />
+	<link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+	<link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+	<link rel="stylesheet" type="text/css" href="./components/footer-image.css" />
+	<link rel="stylesheet" type="text/css" href="./components/footer-link.css" />
+	<link rel="stylesheet" type="text/css" href="./components/header-full.css" />
+	<style>
+		.nav{
+			background: #ffffff;
+			border-bottom: 2px solid #c7c7c7;
+		}
+		
+		.nav-list{
+			padding-left: 230px;
+		}
+		
+		.nav-list li{
+			display: inline-block;
+			height: 40px;
+			line-height: 40px;
+			text-align: center;
+			padding: 0 30px;
+			cursor: pointer;
+		}
+		
+		.nav-list li.active{
+			background: #000000;
+			color: white;
+		}
+		
+		.banner{
+			height: 600px;
+			display: flex;
+		}
+		
+		.banner-left{
+			width: 190px;
+			height: 100%;
+			background: #ffffff;
+			padding: 0 20px;
+		}
+		
+		.banner-left-list li{
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			height: 50px;
+			border-bottom: 1px solid #3a3838;
+			color: #000000;
+			cursor: pointer;
+			padding-left: 8px;
+		}
+	
+		
+		.banner-mid{
+			flex-grow: 1;
+			height: 100%;
+			padding: 5px;
+		}
+
+		.banner-right{
+			width: 240px;
+			height: 100%;
+			background: #000000;
+			background-size:cover;
+			background-image: url("/images/index_right.JPG");
+		}
+		
+		.hot-title{
+			flex-grow: 1;
+			flex-shrink: 0;
+			height: 290px;
+			border-bottom: 1px solid #E4E4E4;
+			border-right: 1px solid #E4E4E4;
+			padding: 8px 16px;
+			width: 170px;
+			background-size:cover;
+			background-image: url("/images/hot_logo.PNG");
+		}
+		
+		.hot-body{
+			background: #ffffff;
+			display: flex;
+			border-left: 1px solid #E4E4E4;
+			border-top: 1px solid #E4E4E4;
+		}
+		
+		.hot-body-item{
+			flex-grow: 1;
+			flex-shrink: 0;
+			height: 290px;
+			border-bottom: 1px solid #E4E4E4;
+			border-right: 1px solid #E4E4E4;
+			padding: 8px 16px;
+			background-size: auto 75%;
+			background-position:bottom right;
+			background-repeat: no-repeat;
+		}
+		
+		.floor-title{
+			background: #f5f4f4;
+			border-bottom: 2px solid #cbcbcb;
+			text-align: center;
+			font-size: 40px;
+		}
+		
+
+		
+		.floor-body{
+			display: grid;
+			grid-template-columns: 310px 2fr 1fr 1fr;
+			grid-template-rows: 150px 150px 150px;
+			grid-template-areas: 'a b d g'
+			                     'a c e h'
+			                     'a c f i';
+								 
+		    grid-row-gap: 1px;
+		    grid-column-gap: 1px;
+			background: #ffffff;
+			border-bottom: 1px solid #E4E4E4;
+			border-right: 1px solid #E4E4E4;
+		}
+		
+		.floor-body-item{
+			background-position:bottom right; 
+			background-repeat: no-repeat;
+			background-color: white;
+			background-size: auto 75%;
+			padding: 8px 16px;
+		}
+		
+		.floor-body-item > div:first-child{
+			font-weight: 900;
+		}
+		
+		.el-carousel, .el-carousel__container, .el-carousel__item{
+			width: 100%;
+			height: 100%;
+		}
+			
+		.el-carousel__item .el-image {
+			opacity: 0.75;
+			width: 100%;
+			height: 100%;
+			margin: 0;
+		}
+
+		.el-carousel__item:nth-child(2n) {
+			background-color: #99a9bf;
+		}
+
+		.el-carousel__item:nth-child(2n+1) {
+			background-color: #d3dce6;
+		}
+
+		.indexbk{
+			background: #f5f5f5;
+		}
+	</style>
+</head>
+<body>
+    <div id="app" class="indexbk">
+		<header-full></header-full>
+		<div class="nav m-b-8">
+			<min-width-container>
+				<div class="nav-list text-2">
+					<ul class="text-general-1">
+						<li class="active">配件商城</li>
+						<li>金融服务</li>
+						<li>销售/服务网络</li>
+						<li>积分商城</li>
+					</ul>
+				</div>
+			</min-width-container>
+		</div>
+		<min-width-container>
+			<div class="banner">
+				<div class="banner-left m-r-8">
+					<ul class="banner-left-list  text-2">
+						<li @click="go_search" v-for="cls of classes">
+							<div>{{cls.name}}</div>
+							<div><span class="el-icon-arrow-right"></span></div>
+						</li>
+					</ul>
+				</div>
+				<div class="banner-mid m-r-8">
+				  <el-carousel :interval="5000" arrow="always">
+					  <!-- 一个图片轮播组件 -->
+					  <!-- 我猜它的逻辑应该是，相当于一个图片轮播列表 -->
+					  <!-- v-bind:interval:控制轮播间隔时间(ms) -->
+					  <!-- arrow：切换箭头的显示时机 -->
+<!--					  trigger:下方显示器的触发方式：缺省表示hover切换，click表示点击切换-->
+<!--					  autoplay：是否自动切换，默认为是-->
+<!--					  indicator-position:指示器位置-->
+					  <!-- 然后在列表中添加项，el-carousel-item，项中再嵌套el-image -->
+
+					<el-carousel-item v-for="item in 4" :key="item">
+					  <el-image :src="'/images/banner/banner'+ (item + 1) + '.jpg'"></el-image>
+					</el-carousel-item>
+				  </el-carousel>
+				</div>
+				<div class="banner-right">
+				</div>
+			</div>
+		</min-width-container>
+		<min-width-container>
+			<div class="hot m-t-20">
+				<div class="hot-body ">
+					<div class="hot-title pointer"></div>
+					<div class="hot-body-item pointer" v-for="item of hot_commodities" :style="{backgroundImage: 'url(' +item.iconUrl  + ')'} "  @click="go_detail(item.id)">
+						<div class="hot-body-item-line1 text-3 text-general-1">{{item.name}}</div>
+						<div class="hot-body-item-line2 text-3" style="color: #FE653A">¥{{item.price.toFixed(2)}}</div>
+					</div>
+				</div>
+			</div>
+		</min-width-container>
+		<min-width-container>
+			<div class="floor m-t-16" v-for="floor, index of floors">
+				<div class="floor-title center text-1 m-l-20">
+					{{floor.name}}
+				</div>
+				<div class="floor-body">
+					<div style="grid-area:a">
+						<el-image :src="'/images/f' + (index + 1)+ '_left_big.jpg'"></el-image>
+					</div> <!--310  450-->
+					<div class="floor-body-item pointer" v-if="floor.children[0]" :style="{backgroundImage: 'url(' + floor.children[0].iconUrl + ')', gridArea:'b'}" @click="go_detail(floor.children[0].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[0].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[0].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[1]" :style="{backgroundImage: 'url(' + floor.children[1].iconUrl + ')', gridArea:'c'}" @click="go_detail(floor.children[1].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[1].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[1].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[2]" :style="{backgroundImage: 'url(' + floor.children[2].iconUrl + ')', gridArea:'d'}" @click="go_detail(floor.children[2].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[2].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[2].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[3]" :style="{backgroundImage: 'url(' + floor.children[3].iconUrl + ')', gridArea:'e'}" @click="go_detail(floor.children[3].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[3].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[3].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[4]" :style="{backgroundImage: 'url(' + floor.children[4].iconUrl + ')', gridArea:'f'}" @click="go_detail(floor.children[4].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[4].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[4].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[5]" :style="{backgroundImage: 'url(' + floor.children[5].iconUrl + ')', gridArea:'g'}" @click="go_detail(floor.children[5].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[5].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[5].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[6]" :style="{backgroundImage: 'url(' + floor.children[6].iconUrl + ')', gridArea:'h'}" @click="go_detail(floor.children[6].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[6].name}}</div>
+						<div class="floor-body-item-line2 text-5" style="color: #FE653A">¥{{floor.children[6].price.toFixed(2)}}</div>
+					</div>
+					<div class="floor-body-item pointer" v-if="floor.children[7]" :style="{backgroundImage: 'url(' + floor.children[7].iconUrl + ')', gridArea:'i'}" @click="go_detail(floor.children[7].id)">
+						<div class="floor-body-item-line1 text-4 text-general-1">{{floor.children[7].name}}</div>
+						<div class="floor-body- item-line2 text-5" style="color: #FE653A">¥{{floor.children[7].price.toFixed(2)}}</div>
+					</div>
+				</div>
+				<div class="pointer text-general-1 right" @click="go_search">查看更多>></div>
+			</div>
+		</min-width-container>
+		<footer-image></footer-image>
+		<footer-link></footer-link>
+		<footer-bottom></footer-bottom>
+    </div>
+    <script src="./js/vue.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <script src="./element-ui/index.js"></script>
+	<script src="./components/min-width-container.js"></script>
+	<script src="./components/footer-image.js"></script>
+	<script src="./components/footer-bottom.js"></script>
+	<script src="./components/footer-link.js"></script>
+	<script src="./components/header-full.js"></script>
+    <script>
+        const app = new Vue({
+            el: "#app",
+            data(){
+            	return {
+					hot_commodities : [],
+					classes: [],//这个class里面的内容到底是什么啊》》
+					floors: []
+            	};
+            },
+            methods: {
+                go_detail(id){
+                	window.location.href = "/commodity-detail.html?" + id;
+                },
+				
+				go_search(){
+					window.location.href = "/commodity-search.html";
+				}
+            },
+            created(){
+            	//这个created应该就是构造方法吧？
+				const params = new URLSearchParams();
+				params.append('num', '5');
+            	axios.post("/product/findhotproducts.do", params).then(response=>{
+            		if(response.data.status === 0){
+            			this.hot_commodities = response.data.data;
+            			//console.log(this.hot_commodities);
+            		}else{
+            			console.log(response.data.msg);
+            		}
+            	}).catch(err=>{
+            		console.log(err);
+            	});
+            	/*获取类型列表*/
+            	axios.post("/param/findallparams.do").then(response=>{
+            		if(response.data.status === 0){
+            			this.classes = response.data.data;
+            		}else{
+            			console.log(response.data.msg);
+            		}
+            	}).catch(err=>{
+            		console.log(err);
+            	});
+				//获取楼层商品
+				axios.post("/product/findfloors.do").then(response=>{
+					if(response.data.status === 0){
+						this.floors = response.data.data;
+					}else{
+            			console.log(response.data.msg);
+            		}
+				}).catch(err=>{
+					console.log(err);
+				});
+            }
+        });
+		
+    </script>
+</body>
+</html>

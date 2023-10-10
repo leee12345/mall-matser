@@ -1,0 +1,112 @@
+html, body{
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+li, ul{
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+
+/*包含以下四种的链接*/
+a {
+    text-decoration: none;
+}
+/*正常的未被访问过的链接*/
+a:link {
+    text-decoration: none;
+}
+/*已经访问过的链接*/
+a:visited {
+    text-decoration: none;
+	color: #2D8CF0;
+}
+/*鼠标划过(停留)的链接*/
+a:hover {
+    text-decoration: none;
+}
+/* 正在点击的链接*/
+a:active {
+    text-decoration: none;
+}
+
+div, header, footer, nav, section, article, aside, figure{
+	box-sizing: border-box;
+}
+
+img{
+	display: inline-block;
+}
+
+p, h1, h2, h3, h4, h5, h6{
+	margin: 0;
+}
+
+*{
+	line-height: 1.5;
+}
+
+.text-1{font-size: 24px;}
+.text-2{font-size: 18px;}
+.text-3{font-size: 16px;}
+.text-4{font-size: 14px;}
+.text-5{font-size: 12px;}
+.text-6{font-size: 10px;}
+.text-important-very{color: #2D8CF0;}
+.text-important{color: #272727;}
+.text-general-1{color: #5A5A5A;}
+.text-general-2{color: #8D8D8D;}
+.text-general-3{color: #C0C0C0;}
+.text-weak-1{color: #E6E6E6;}
+.text-weak-2{color: #F7F7F7;}
+.text-weak-3{ color: #F2F2F7;}
+.text-weak-4{ color: #FFFFFF;}
+.left{text-align: left;}
+.right{text-align: right;}
+.center{text-align: center;}
+.m-l-4{margin-left: 4px;}
+.m-l-8{margin-left: 8px;}
+.m-l-12{margin-left: 12px;}
+.m-l-16{margin-left: 16px;}
+.m-l-20{margin-left: 20px;}
+.m-r-4{margin-right: 4px;}
+.m-r-8{margin-right: 8px;}
+.m-r-12{margin-right: 12px;}
+.m-r-16{margin-right: 16px;}
+.m-r-20{margin-right: 20px;}
+.m-t-4{margin-top: 4px;}
+.m-t-8{margin-top: 8px;}
+.m-t-12{margin-top: 12px;}
+.m-t-16{margin-top: 16px;}
+.m-t-20{margin-top: 20px;}
+.m-b-4{margin-bottom: 4px;}
+.m-b-8{margin-bottom: 8px;}
+.m-b-12{margin-bottom: 12px;}
+.m-b-16{margin-bottom: 16px;}
+.m-b-20{margin-bottom: 20px;}
+.p-l-4{margin-left: 4px;}
+.p-l-8{margin-left: 8px;}
+.p-l-12{margin-left: 12px;}
+.p-l-16{margin-left: 16px;}
+.p-l-20{margin-left: 20px;}
+.p-r-4{margin-right: 4px;}
+.p-r-8{margin-right: 8px;}
+.p-r-12{margin-right: 12px;}
+.p-r-16{margin-right: 16px;}
+.p-r-20{margin-right: 20px;}
+.p-t-4{margin-top: 4px;}
+.p-t-8{margin-top: 8px;}
+.p-t-12{margin-top: 12px;}
+.p-t-16{margin-top: 16px;}
+.p-t-20{margin-top: 20px;}
+.p-b-4{margin-bottom: 4px;}
+.p-b-8{margin-bottom: 8px;}
+.p-b-12{margin-bottom: 12px;}
+.p-b-16{margin-bottom: 16px;}
+.p-b-20{margin-bottom: 20px;}
+.pointer{cursor: pointer;}
+.omit{overflow: hidden; white-space: nowrap; text-overflow:ellipsis;}
+.bold{font-weight: 900;}

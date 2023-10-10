@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>管理员管理 | 后台管理 </title>
+    <link rel="stylesheet" type="text/css" href="./../element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="./../css/common.css"/>
+    <link rel="stylesheet" type="text/css" href="../components/admin-frame.css"/>
+    <link rel="stylesheet" type="text/css" href="./../components/min-width-container.css"/>
+    <style>
+        #app {
+            height: 100%;
+        }
+
+        .type-add {
+            text-align: right;
+            padding: 8px 0;
+        }
+
+        #app .el-button--primary {
+            background-color: #3C8DBC;
+            border-color: #3C8DBC;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <admin-frame active="5" title="管理员管理">
+        <min-width-container>
+            <div class="m-t-8 m-b-8">
+                <div class="app-title text-2 text-important">管理员列表</div>
+            </div>
+            <div class="type-add">
+                <el-button type="primary" size="mini" @click="mgr_add">新增管理员</el-button>
+            </div>
+            <div>
+                <template>
+                    <el-table
+                            :data="tableData.slice((currentPage-1)*pageSize,currentPage*pageSize).filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
+                            border
+                            style="width: 100%">
+                        <el-table-column fixed prop="id" label="编号" width="60">
+                        </el-table-column>
+                        <el-table-column prop="account" label="用户名" width="100">
+                        </el-table-column>
+                        <el-table-column prop="name" label="姓名">
+                        </el-table-column>
+                        <el-table-column label="性别" width="100">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.sex === 0">保密</span>
+                                <span v-if="scope.row.sex === 1">男</span>
+                                <span v-if="scope.row.sex === 2">女</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="权限" width="100">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.role === 1">普通管理员</span>
+                                <span v-if="scope.row.role === 2">超级管理员</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="age" label="年龄" width="60">
+                        </el-table-column>
+                        <el-table-column prop="phone" label="手机号" width="200">
+                        </el-table-column>
+                        <el-table-column prop="email" label="邮箱" width="150">
+                        </el-table-column>
+                        <el-table-column
+                                label="启用"
+                                width="120">
+                            <template slot-scope="scope">
+                                <el-switch
+                                        v-model="!scope.row.del"
+                                        active-color="#13ce66"
+                                        inactive-color="#ff4949"
+                                        @change="set_status(scope.row)">
+                                </el-switch>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="150" align="right">
+                            <template slot="header" slot-scope="scope">
+                                <el-input
+                                        v-model="search"
+                                        size="mini"
+                                        placeholder="输入姓名搜索"/>
+                            </template>
+                            <template slot-scope="scope">
+                                <el-button type="text" size="small" @click="edit(scope.row)">编辑</el-button>
+                                <el-button type="text" size="small" @click="reset_password(scope.row)">重置密码</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <el-pagination
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            :current-page.sync="currentPage"
+                            :page-sizes="[10, 20, 50, 100]"
+                            :page-size="pageSize"
+                            layout="sizes, prev, pager, next"
+                            :total="total">
+                    </el-pagination>
+                </template>
+            </div>
+        </min-width-container>
+    </admin-frame>
+    <el-dialog title="添加/编辑用户信息" :visible.sync="dialogFormVisible" width="640px">
+        <el-form ref="form" :model="dialogFormItem" :rules="rules" :label-width="100">
+            <el-form-item label="账号" prop="account">
+                <el-input v-model="dialogFormItem.account" autocomplete="off"
+                          v-bind:disabled="!is_add"></el-input>
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+                <el-input v-model="dialogFormItem.name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="年龄" prop="age">
+                <el-input v-model="dialogFormItem.age" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="电话" prop="phone">
+                <el-input v-model="dialogFormItem.phone" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="dialogFormItem.email" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+                <el-radio size="mini" v-model="dialogFormItem.sex" label="0">保密</el-radio>
+                <el-radio size="mini" v-model="dialogFormItem.sex" label="1">男</el-radio>
+                <el-radio size="mini" v-model="dialogFormItem.sex" label="2">女</el-radio>
+            </el-form-item>
+            <el-form-item label="权限">
+                <el-radio size="mini" v-model="dialogFormItem.role" label="1">普通管理员</el-radio>
+                <el-radio size="mini" v-model="dialogFormItem.role" label="2">超级管理员</el-radio>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false" size="mini">取 消</el-button>
+            <el-button type="primary" size="mini" @click="save">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+<script src="./../js/vue.js"></script>
+<script src="./../js/axios.min.js"></script>
+<script src="./../element-ui/index.js"></script>
+<script src="../components/admin-frame.js"></script>
+<script src="./../components/min-width-container.js"></script>
+<script>
+    const app = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    account: '',
+                    currentPage: 1,
+                    pageSize: 10,
+                    total: 0,
+                    search: '',
+                    tableData: [],
+                    dialogFormVisible: false,
+                    is_add: false,
+                    dialogFormItem: {
+                        id: '',
+                        account: '',
+                        name: '',
+                        age: '',
+                        phone: '',
+                        email: '',
+                        sex: '0',
+                        role: '1',
+                    },
+                    rules: {
+                        account: [{
+                            validator: (rule, value, callback) => {
+                                if (value == "") {
+                                    callback(new Error("不能为空"))
+                                } else {
+                                    callback()
+                                }
+                            },
+                            trigger: 'blur'
+                        }],
+                        name: [{
+                            validator: (rule, value, callback) => {
+                                if (value.length > 5) {
+                                    callback(new Error("不能超过5个字符"))
+                                } else {
+                                    callback()
+                                }
+                            },
+                            trigger: 'blur'
+                        }],
+                        age: [{
+                            validator: (rule, value, callback) => {
+                                if (/^\d{1,2}$/.test(value) || value == "") {
+                                    callback()
+                                } else {
+                                    callback(new Error("请输入正确的年龄"))
+                                }
+                            },
+                            trigger: 'blur'
+                        }],
+                        phone: [{
+                            validator: (rule, value, callback) => {
+                                if (value === "" || /^1\d{10}$/.test(value)) {
+                                    callback()
+                                } else {
+                                    callback(new Error("请输入正确的手机号"))
+                                }
+                            },
+                            trigger: 'blur'
+                        }],
+                        email: [{
+                            validator: (rule, value, callback) => {
+                                if (value === "" || /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/.test(value)) {
+                                    callback()
+                                } else {
+                                    callback(new Error("请输入正确的电子邮箱"))
+                                }
+                            },
+                            trigger: 'blur'
+                        }],
+                    }
+                };
+            },
+            created() {
+                this.load_users();
+            },
+            methods: {
+                load_users() {
+                    axios.post("/mgr/user/findmgrlist.do").then(response => {
+                        if (response.data.status === 0) {
+                            this.tableData = response.data.data;
+                            this.total = this.tableData.length;
+                        } else {
+                            if (response.data.msg) {
+                                console.log(response.data.msg);
+                                this.$message.error(response.data.msg);
+                            }
+                        }
+                        this.account = JSON.parse(localStorage.getItem('user')).account;
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                },
+                mgr_add() {
+                    this.is_add = true;
+                    this.dialogFormVisible = true;
+                    this.dialogFormItem = {
+                        id: '',
+                        account: '',
+                        name: '',
+                        age: '',
+                        phone: '',
+                        email: '',
+                        sex: '0',
+                        role: '1',
+                    };
+                },
+                edit(row) {
+                    this.is_add = false;
+                    this.dialogFormVisible = true;
+                    this.dialogFormItem = row;
+                    this.dialogFormItem.sex += '';
+                    this.dialogFormItem.role += '';
+                },
+                save() {
+                    this.$refs.form.validate((valid) => {
+                        if (valid) {
+                            const params = new URLSearchParams();
+                            params.append("id", this.dialogFormItem.id == "" ? 0 : this.dialogFormItem.id);
+                            params.append("name", this.dialogFormItem.name);
+                            params.append("account", this.dialogFormItem.account);
+                            params.append("age", this.dialogFormItem.age == "" ? 0 : this.dialogFormItem.age);
+                            params.append("phone", this.dialogFormItem.phone);
+                            params.append("email", this.dialogFormItem.email);
+                            params.append("sex", this.dialogFormItem.sex);
+                            params.append("role", this.dialogFormItem.role);
+                            params.append("type", this.is_add ? 1 : 0);
+                            axios.post("/mgr/user/updateuser.do", params).then(response => {
+                                if (response.data.status === 0) {
+                                    this.$message({
+                                        message: "成功",
+                                        type: "success"
+                                    });
+                                    this.dialogFormVisible = false;
+                                    this.load_users();
+                                } else {
+                                    if(this.is_add==1){
+                                        this.$message.error("添加失败");
+                                    }else{
+                                        this.$message.error("修改失败");
+                                    }
+                                }
+                            }).catch(err => {
+                                console.log(err);
+                                this.$message.error("连接服务器异常");
+                            });
+                        }
+                    });
+                },
+                reset_password(row) {
+                    const params = new URLSearchParams();
+                    params.append("id", row.id);
+                    axios.post("/mgr/user/resetpassword.do", params).then(response => {
+                        if (response.data.status === 0) {
+                            this.$message({
+                                message: "重置成功",
+                                type: "success"
+                            });
+                        } else {
+                            if (response.data.msg) {
+                                console.log(response.data.msg);
+                                this.$message.error(response.data.msg);
+                            }
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                        this.$message.error("连接服务器异常");
+                    });
+                },
+                set_status(row) {
+                    if (row.account === this.account) {
+                        this.$message.error("不能禁用当前用户");
+                        return;
+                    }
+                    const params = new URLSearchParams();
+                    params.append("id", row.id);
+                    params.append("del", row.del ? 0 : 1);
+                    axios.post("/mgr/user/deleteusers.do", params).then(response => {
+                        if (response.data.status === 0) {
+                            this.$message({
+                                message: "成功",
+                                type: "success"
+                            });
+                            this.load_users();
+                        } else {
+                            if (response.data.msg) {
+                                console.log(response.data.msg);
+                                this.$message.error(response.data.msg);
+                            }
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                        this.$message.error("连接服务器异常");
+                    });
+                },
+                handleSizeChange: function (pageSize) { // 每页条数切换
+                    this.pageSize = pageSize
+                },
+                handleCurrentChange: function (currentPage) {//页码切换
+                    this.currentPage = currentPage
+                }
+            },
+        })
+    ;
+</script>
+</body>
+</html>

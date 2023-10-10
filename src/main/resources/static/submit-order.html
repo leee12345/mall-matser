@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>提交订单 | 机械配件商城</title>
+		<link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+		<link rel="stylesheet" type="text/css" href="./css/common.css" />
+		<link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+		<link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+		<link rel="stylesheet" type="text/css" href="./components/footer-image.css" />
+		<link rel="stylesheet" type="text/css" href="./components/footer-link.css" />
+		<link rel="stylesheet" type="text/css" href="./components/header-full.css" />
+		<link rel="stylesheet" type="text/css" href="./components/user-frame.css" />
+		<style>
+			.app-title{
+				font-weight: 900;
+			}
+			
+			.app-addr-item{
+				display: inline-block;
+				width: 238px;
+				height: 107px;
+				background-repeat: no-repeat;
+				background-size: 100% 100%;
+				background-image: url(images/shdz_bgon.gif);
+				vertical-align: bottom;
+				padding: 12px;
+				position: relative;
+			}
+
+			.app-addr-item-plain{
+				background-image: url(images/shdz_bg.gif);
+			}
+			
+			.app-addr-change{
+				display: inline-block;
+				vertical-align: bottom;
+				margin-left: 8px;
+				color: #F49B50;
+				text-decoration: underline;
+			}
+			
+			.app-addr-default{
+				position: absolute;
+				top: 0;
+				right: 0;
+				background: #F2F2F1;
+				padding: 2px 4px;
+				
+			}
+			
+			.app-header{
+				display: grid;
+				width: 100%;
+				grid-template-columns: 1fr 200px 200px 200px;
+				border-top: 3px solid #40B4E6;
+				background: #F2F2F2;
+			}
+			
+			.app-header > div{
+				line-height: 2.2;
+			}
+			
+			.app-item{
+				display: grid;
+				width: 100%;
+				grid-template-columns: 1fr 200px 200px 200px;
+				grid-template-rows: 80px;
+				border-left: 1px solid #F2F2F2;
+				border-top: 1px solid #F2F2F2;
+			}
+			
+			.app-item > div{
+				border-bottom: 1px solid #F2F2F2;
+				border-right: 1px solid #F2F2F2;
+				line-height: 78px;
+			}
+			
+			
+			.app-counter{
+				display: flex;
+				height: 55px;
+				line-height: 55px;
+				align-items: center;
+				background: #F2F2F2;
+				margin-top: 30px;
+			}
+			
+			.app-counter *{
+				vertical-align: middle;
+			}
+			
+			.app-counter-clear{
+				flex-grow: 1;
+				margin-left: 40px;
+			}
+			
+			.app-counter-price{
+				margin: 0 30px;
+			}
+			
+			.app-counter-submit{
+				align-self: stretch;
+				width: 128px;
+				background: #F6660E;
+				line-height: 55px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<header-full :bordered="true"></header-full>
+			<user-frame class="m-t-20">
+				<div class="app-title text-general-1 m-t-20 m-b-20">
+					商品信息
+				</div>
+				<div class="app-addr text-4 text-general-1">
+					<div class="app-addr-item" v-if="addr_selected">
+						<div style="border-bottom:  1px solid #F5F5F5;">{{addr_selected.name}} 收</div>
+						<div>{{addr_selected.province}} {{addr_selected.city}} {{addr_selected.district}}</div>
+						<div>{{addr_selected.addr}}; {{addr_selected.mobile}}</div>
+						<div class="text-important-very pointer" @click="edit_addr(addr_selected)">编辑</div>
+						<div class="app-addr-default" v-if="addr_selected.deFault === 1">默认地址</div>
+					</div>
+					<div class="app-addr-change pointer text-4"  @click="open_select_addr">更换地址</div>
+				</div>
+				<div><el-divider></el-divider></div>
+
+				<transition name="el-zoom-in-top">
+					<div  v-show="add_selector_show" class="app-addrs transition-box">
+						<div class="app-title text-general-1 m-b-12">
+							选择收货地址
+						</div>
+						<div class="app-addrs-body text-4 text-general-1">
+							<div class="app-addr-item app-addr-item-plain m-b-20 m-r-12" v-for="item in addrs">
+								<div style="border-bottom:  1px solid #F5F5F5;">{{item.name}} 收</div>
+								<div>{{item.province}} {{item.city}} {{item.district}}</div>
+								<div>{{item.addr}}; {{item.mobile}}</div>
+								<div class="text-important-very pointer" @click="select_addr(item)">选择</div>
+								<div class="app-addr-default" v-if="item.deFault === 1">默认地址</div>
+							</div>
+						</div>
+					</div>
+				</transition>
+
+				<div class="app-title text-general-1 m-b-12">
+					确认订单信息
+				</div>
+				<div class="app-header center text-4 text-general-1">
+					<div>商品名称</div>
+					<div>单价（元）</div>
+					<div>数量</div>
+					<div>实付（元）</div>
+				</div>
+				<div class="app-item center text-4 text-general-1 m-t-20" v-for="item in cart.lists">
+					<div>{{item.name}}</div>
+					<div>¥{{item.price.toFixed(2)}}</div>
+					<div>x{{item.quantity}}</div>
+					<div>¥{{item.totalPrice.toFixed(2)}}</div>
+				</div>
+				<div class="app-counter text-4 text-general-1">
+					<div class="app-counter-clear pointer"><span class="pointer"></span></div>
+					<div class="app-counter-price">商品金额: <span class="text-1 m-l-8"
+															   style="font-weight: 900; color: #F65D03;">¥{{cart.totalPrice.toFixed(2)}}</span>
+					</div>
+					<div class="app-counter-submit pointer center text-weak-4" @click="go_order_detail">提交订单</div>
+				</div>
+			</user-frame>
+			<footer-image></footer-image>
+			<footer-link></footer-link>
+			<footer-bottom></footer-bottom>
+			、
+
+			<!--			编辑地址的弹窗组件-->
+			<el-dialog
+					title="修改地址信息"
+					:visible.syn="visible"
+					width="60%"
+					:before-close="before_close"
+			>
+				<!--				title : 弹窗标题-->
+				<!--				:visivle.syn : 弹窗出现控制变量-->
+				<!--				width:弹窗宽度-->
+				<!--				:before-close : 关闭之前做什么-->
+
+				<div>
+					<el-form :inline="false" :model="addr_selected" label-width="120px">
+						<el-form-item label="请选择地区:">
+							<el-cascader v-model="selectedOptions" :options="options"
+										 :props="{ expandTrigger: 'hover' }"></el-cascader>
+						</el-form-item>
+					</el-form>
+					<el-form ref="form" :model="form" :rules="rules2" label-width="120px">
+						<el-form-item label="详细地址:" prop="addr">
+							<el-input size="mini" v-model="form.addr"
+									  placeholder="请输入详细的地址信息,如小区/街道/门牌号/单元等"></el-input>
+						</el-form-item>
+						<el-form-item label="邮编:">
+							<el-input size="mini" v-model="form.zip" placeholder="请填写邮编"></el-input>
+						</el-form-item>
+						<el-form-item label="收货人:" prop="name">
+							<el-input size="mini" v-model="form.name" placeholder="请输入收货人姓名,长度不超过20"></el-input>
+						</el-form-item>
+						<el-form-item label="手机号码:" prop="mobile">
+							<el-input size="mini" v-model="form.mobile" placeholder="请输入13位手机号码"></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" size="mini" @click="update_address()">保存</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+
+			</el-dialog>
+
+		</div>
+		<script src="./js/vue.js"></script>
+		<script src="./js/axios.min.js"></script>
+		<script src="./element-ui/index.js"></script>
+		<script src="./components/min-width-container.js"></script>
+		<script src="./components/footer-image.js"></script>
+		<script src="./components/footer-bottom.js"></script>
+		<script src="./components/footer-link.js"></script>
+		<script src="./components/header-full.js"></script>
+		<script src="./components/user-frame.js"></script>
+		<script>
+		    const app = new Vue({
+		        el: "#app",
+		        data(){
+					return {
+						add_selector_show: false,
+						addrs: [],
+						addr_selected: null,
+						cart: {
+							lists: [],
+							totalPrice: 0,
+
+
+						},
+
+						//设置弹窗可见
+						visible: false,
+						//添加编辑地址表单数据
+						addr_id: '',
+						form: {
+							addr: '',
+							zip: '',
+							name: '',
+							mobile: ''
+						},
+						options: [],
+						selectedOptions: [],
+						rules2: {
+							addr: [
+								{required: true, message: '请输入', trigger: 'blur'},
+								{min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur'}
+							],
+							name: [
+								{required: true, message: '请输入', trigger: 'blur'},
+								{min: 1, max: 5, message: '长度在 1 到 5 个字符', trigger: 'blur'}
+							],
+							mobile: [
+								{required: true, message: '请输入', trigger: 'blur'},
+								{min: 11, max: 11, message: '长度在 11 到 11 个字符', trigger: 'blur'}
+							]
+						},
+						tableData: [],
+
+						//设置支付弹窗
+						paying: false,
+
+					};
+		        },
+		        created(){
+		        	// 加载地址列表
+		        	axios.post("/addr/findaddrs.do").then(response=>{
+						if(response.data.status === 0){
+							this.addrs = response.data.data;
+							for(let addr of this.addrs){
+								if(addr.deFault === 1){
+									this.addr_selected = addr;
+								}
+							}
+						} else {
+							console.log(response.data.msg);
+						}
+					}).catch(err => {
+						console.log(err);
+					});
+
+					// 从session读取购物信息
+					const cart = JSON.parse(sessionStorage.getItem("cart"));
+					if (cart) {
+						this.cart = cart;
+					}
+
+					/* 加载联动地址配置 */
+					axios.get("/districts.json").then(response => {
+						this.options = this.json2options(response.data);
+					}).catch(err => {
+						console.log(err);
+					})
+
+					//for test only
+					var productID = this.cart.lists[0].productId;
+					const params1 = new URLSearchParams();
+					params1.append("productId", productID)
+					var able = false;
+					axios.post("/product/getdetail.do", params1).then(response => {
+						console.log(this.cart.lists[0].quantity)
+						console.log(response.data.data.stock)
+					})
+				},
+				methods: {
+					go_order_detail() {
+						if (this.addr_selected == null) {
+							this.$message.info("请选择地址");
+							return;
+						}
+
+						//这里判断一下购买数量是否超过库存
+						var productID = this.cart.lists[0].productId;
+						const params1 = new URLSearchParams();
+						params1.append("productId", productID)
+						var able = false;
+						axios.post("/product/getdetail.do", params1).then(response => {
+							if (this.cart.lists[0].quantity > response.data.data.stock) {
+								this.$message.error("购买数量不得超过库存！");
+							} else {
+								//可以购物了
+								if (this.cart.is_simulated_cart) {
+									const params = new URLSearchParams();
+									params.append("addrId", this.addr_selected.id);
+									params.append("productId", this.cart.lists[0].productId);
+									params.append("quantity", this.cart.lists[0].quantity);
+									axios.post("/order/createsingleproductorder.do", params).then(response => {
+										if (response.data.status === 0) {
+											window.location.href = '/order-detail.html?' + response.data.data.orderNo;
+										} else {
+											if (response.data.msg) {
+												this.$message.error(response.data.msg);
+											}
+										}
+									}).catch(err => {
+										console.log(err);
+										this.$message.error("连接服务器异常");
+									});
+								} else {
+									//原本想要用这样的方式来完成订单的添加，但是这个问题先暂时放在这里吧
+									// const params = new URLSearchParams();
+									// params.append("addrId", this.addr_selected.id);
+									// axios.post("/order/createorder.do", params).then(response=>{
+									// 	if(response.data.status === 0){
+									// 		window.location.href = '/order-detail.html?' + response.data.data.orderNo;
+									// 	}else{
+									// 		if(response.data.msg){
+									// 			this.$message.error(response.data.msg);
+									// 		}
+									// 	}
+									// }).catch(err=>{
+									// 	console.log(err);
+									// 	this.$message.error("连接服务器异常");
+									// });
+									const params = new URLSearchParams();
+									params.append("addrId", this.addr_selected.id);
+									params.append("productId", this.cart.lists[0].productId);
+									params.append("quantity", this.cart.lists[0].quantity);
+									axios.post("/order/createsingleproductorder.do", params).then(response => {
+										if (response.data.status === 0) {
+											window.location.href = '/order-detail.html?' + response.data.data.orderNo;
+										} else {
+											if (response.data.msg) {
+												this.$message.error(response.data.msg);
+											}
+										}
+									}).catch(err => {
+										console.log(err);
+										this.$message.error("连接服务器异常");
+									});
+								}
+							}
+						})
+
+
+					},
+					open_select_addr() {
+						this.add_selector_show = true;
+					},
+					select_addr(addr) {
+						this.add_selector_show = false;
+						this.addr_selected = addr;
+					},
+
+					//修改已有的地址
+					edit_addr(addr) {
+						this.visible = true;//显示弹窗
+
+						this.addr_id = addr.id;
+						this.form.addr = addr.addr;
+						this.form.zip = addr.zip;
+						this.form.name = addr.name;
+						this.form.mobile = addr.mobile;
+					},
+					/*更新一个地址*/
+					update_address() {
+						this.$refs.form.validate((valid) => {
+							if (valid && this.selectedOptions.length === 3) {
+								const params = new URLSearchParams();
+								params.append("id", this.addr_id);
+								params.append("name", this.form.name);
+								params.append("mobile", this.form.mobile);
+								params.append("province", this.selectedOptions[0]);
+								params.append("city", this.selectedOptions[1]);
+								params.append("district", this.selectedOptions[2]);
+								params.append("addr", this.form.addr);
+								params.append("zip", this.form.zip);
+								axios.post("/addr/updateaddr.do", params).then(response => {
+									if (response.data.status === 0) {
+										this.$message({
+											message: "更新成功",
+											type: "success"
+										});
+										this.addr_id = '';
+										setTimeout(() => {
+											window.location.reload();
+										}, 1000);
+									} else {
+										this.$message.error(response.data.msg);
+									}
+								}).catch(err => {
+									this.$message.error("连接服务器失败");
+								});
+							} else if (this.selectedOptions.length < 3) {
+								this.$message.error("请选择地区")
+							}
+						});
+
+					},
+					before_close() {
+						this.visible = false;
+					},
+					//	utils:
+					json2options(json) {
+						let provinces = [];
+						//遍历每个省
+						for (let key in json['100000']) {
+							let name = json['100000'][key];
+							let province = {label: name, value: name, children: []};
+							provinces.push(province);
+							//遍历每个市
+							for (let key2 in json[key]) {
+								let name = json[key][key2];
+								let city = {label: name, value: name, children: []};
+								province.children.push(city);
+								//遍历每个县
+								for (let key3 in json[key2]) {
+									let name = json[key2][key3];
+									let district = {label: name, value: name};
+									city.children.push(district);
+								}
+							}
+						}
+						return provinces;
+					}
+				}
+		    });
+			
+		</script>
+	</body>
+</html>

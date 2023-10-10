@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>个人资料 | 机械配件商城</title>
+    <link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="./css/common.css" />
+    <link rel="stylesheet" type="text/css" href="./components/min-width-container.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/footer-bottom.css"/>
+    <link rel="stylesheet" type="text/css" href="./components/footer-image.css" />
+    <link rel="stylesheet" type="text/css" href="./components/footer-link.css" />
+    <link rel="stylesheet" type="text/css" href="./components/header-full.css" />
+    <link rel="stylesheet" type="text/css" href="./components/user-frame.css" />
+    <style>
+        .app-title{
+            border-bottom: 1px solid #EEEEEE;
+            line-height: 2;
+            font-weight: 900;
+        }
+
+        .app-form{
+            margin-top: 40px;
+        }
+
+        .app-form-wapper{
+            width: 420px;
+        }
+
+        .app-form-wapper .el-form--inline .el-input{
+            width: 93px;
+        }
+
+        .app-table, .app-form{
+            padding: 0 40px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header-full :bordered="true"></header-full>
+    <user-frame class="m-t-20">
+        <div class="app-title text-2 text-important">个人资料</div>
+        <div class="app-form">
+            <div class="app-form-wapper">
+                <el-form ref="form" :model="form" :rules="rules"  label-width="100px">
+                    <el-form-item label="用户名:" >
+                        <el-input size="mini" v-model="form.account" disabled></el-input>
+                    </el-form-item>
+                    <el-form-item label="姓名:" prop="name">
+                        <el-input size="mini" v-model="form.name" ></el-input>
+                    </el-form-item>
+                    <el-form-item label="性别:">
+                        <el-radio size="mini" v-model="form.sex" label="0" >保密</el-radio>
+                        <el-radio size="mini" v-model="form.sex" label="1" >男</el-radio>
+                        <el-radio size="mini" v-model="form.sex" label="2" >女</el-radio>
+                    </el-form-item>
+                    <el-form-item label="密保问题:">
+                        <el-input size="mini" v-model="form.question" ></el-input>
+                    </el-form-item>
+                    <el-form-item label="答案:">
+                        <el-input size="mini" v-model="form.asw" placeholder="答案不予显示"></el-input>
+                    </el-form-item>
+                    <el-form-item label="年龄:" prop="age">
+                        <el-input size="mini" v-model="form.age" ></el-input>
+                    </el-form-item>
+                    <el-form-item label="手机号:" prop="mobile">
+                        <el-input size="mini" v-model="form.mobile" ></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮箱:" prop="email">
+                        <el-input size="mini" v-model="form.email" ></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" size="mini" @click="save_info">保存</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+    </user-frame>
+    <footer-image></footer-image>
+    <footer-link></footer-link>
+    <footer-bottom></footer-bottom>
+</div>
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./element-ui/index.js"></script>
+<script src="./components/min-width-container.js"></script>
+<script src="./components/footer-image.js"></script>
+<script src="./components/footer-bottom.js"></script>
+<script src="./components/footer-link.js"></script>
+<script src="./components/header-full.js"></script>
+<script src="./components/user-frame.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data(){
+            return {
+                addr_id: '',
+                form: {
+                    account: 'zhangsan',
+                    name: '张三',
+                    question: '',
+                    asw: '',
+                    sex: '0',
+                    age: '35',
+                    mobile: '15501080803',
+                    email: '261300@qq.com',
+                },
+                rules:{
+                    name: [
+                        { validator: (rule, value, callback) => { if(value.length > 5){ callback(new Error("不能超过5个字符"))} else {callback()}}, trigger: 'blur' }
+                    ],
+                    age: [
+                        { validator: (rule, value, callback) => { if(/^\d{1,2}$/.test(value)){ callback() } else {callback(new Error("请输入正确的年龄"))}}, trigger: 'blur' }
+                    ],
+                    mobile: [
+                        { validator: (rule, value, callback) => { if(value === "" || /^1\d{10}$/.test(value)){ callback()} else {callback(new Error("请输入正确的手机号"))}}, trigger: 'blur' }
+                    ],
+                    email: [
+                        { validator: (rule, value, callback) => { if(value === "" || /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/.test(value)){callback() } else {callback(new Error("请输入正确的电子邮箱"))}}, trigger: 'blur' }
+                    ],
+                },
+            };
+        },
+        created(){
+            this.load_info();
+        },
+        methods: {
+            load_info(){
+                //加载用户的个人资料
+                axios.post("/user/getuserinfo.do").then(response=>{
+                    if(response.data.status === 0){
+                        const user = response.data.data;
+                        if(user !== undefined){
+                            this.form.account = user.account;
+                            this.form.name = user.name;
+                            this.form.sex = user.sex + '';
+                            this.form.question = user.question;
+                            this.form.asw = user.asw;
+                            this.form.age = user.age;
+                            this.form.mobile = user.phone;
+                            this.form.email = user.email;
+                        }
+                    }else{
+                        if(response.data.msg){
+                            console.log(response.data.msg);
+                        }
+                    }
+                }).catch(err=>{
+                    console.log(err);
+                });
+            },
+            save_info(){
+                this.$refs.form.validate((valid)=>{
+                    if(valid){
+                        const params = new URLSearchParams();
+                        params.append("name",this.form.name);
+                        params.append("email", this.form.email);
+                        params.append("phone", this.form.mobile);
+                        params.append("question", this.form.question);
+                        params.append("asw", this.form.asw);
+                        params.append("age", this.form.age);
+                        params.append("sex", this.form.sex);
+                        axios.post("/user/updateuserinfo.do", params).then(response=>{
+                            if(response.data.status === 0){
+                                this.$message({
+                                    message: "更新成功",
+                                    type: "success"
+                                });
+                            }else{
+                                if(response.data.msg){
+                                    this.$message.error(response.data.msg);
+                                }
+                            }
+                        }).catch(err=>{
+                            console.log(err);
+                            this.$message.error("连接服务器异常");
+                        });
+                    }
+				});
+            }
+        }
+    });
+
+</script>
+</body>
+</html>

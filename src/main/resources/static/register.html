@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册 | 机械配件商城</title>
+    <link rel="stylesheet" type="text/css" href="css/common.css"/>
+    <link rel="stylesheet" type="text/css" href="./element-ui/index.css">
+    <link rel="stylesheet" type="text/css" href="components/min-width-container.css"/>
+    <link rel="stylesheet" type="text/css" href="components/header-simple.css">
+    <link rel="stylesheet" type="text/css" href="components/footer-bottom.css">
+    <link rel="stylesheet" type="text/css" href="components/footer-image.css">
+    <style>
+        .app-content {
+            padding-left: 188px;
+            padding-top: 50px;
+            padding-bottom: 100px;
+        }
+
+        .app-content-form {
+            width: 380px;
+        }
+
+        .app-form-wapper-hint {
+            width: 620px;
+            border-radius: 4px;
+            border: 1px solid #EDEDED;
+            background: #FDFCE7;
+            margin: 20px 0;
+        }
+
+        .app-form-wapper-hint > div {
+            height: 54px;
+            line-height: 54px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <header-simple></header-simple>
+    <min-width-container>
+        <div class="app-content">
+            <div class="app-content-title">
+                <h1>注册账号，玩转商城所有的服务！</h1>
+            </div>
+            <div class="app-form-wapper-hint">
+                <div class="text-4 text-general-1 p-l-20 p-r-20 ">
+                    <span class="text-2 m-r-8" style="font-weight:900; color:#f54f47;">请注意:</span>注册之后请尽快完善个人资料
+                </div>
+            </div>
+            <div class="app-content-form m-t-20">
+                <el-form label-position="right" :rules="rules" ref="form" label-width="100px" :model="userRegister">
+                    <el-form-item label="用户名:" prop="account">
+                        <el-input v-model="userRegister.account" placeholder="1-16个字符"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码:" prop="password">
+                        <el-input v-model="userRegister.password" placeholder="1-32个字符" show-password></el-input>
+                    </el-form-item>
+                    <el-form-item label="确认密码:" prop="password_comfirmed">
+                        <el-input v-model="userRegister.password_comfirmed" placeholder="再次确实密码"
+                                  show-password></el-input>
+                    </el-form-item>
+                </el-form>
+                <div style="margin-left: 80px;">
+                    <el-checkbox-group v-model="acknowledge">
+                        <div>
+                            <el-checkbox name="acknowledge">我已经看过并同意《<span class="text-important-very">网络服务协议</span>》
+                            </el-checkbox>
+                        </div>
+                    </el-checkbox-group>
+                    <div class="m-t-20">
+                        <el-button type="primary" size="small" @click="register">立即注册</el-button>
+                        <span class="m-l-16 text-general-1 text-4">已经注册，<span class="text-important-very pointer"
+                                                                              @click="window.location.href='/password-forget1.html'">找回密码</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </min-width-container>
+    <footer-image></footer-image>
+    <footer-bottom></footer-bottom>
+</div>
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./element-ui/index.js"></script>
+<script src="components/min-width-container.js"></script>
+<script src="components/header-simple.js"></script>
+<script src="components/footer-bottom.js"></script>
+<script src="components/footer-image.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data() {
+            return {
+                userRegister: {
+                    account: "",
+                    password: "",
+                    password_comfirmed: "",
+                },
+                acknowledge: "",
+                rules: {
+                    account: [
+                        {required: true, message: '请输入账号', trigger: 'blur'},
+                        {min: 1, max: 16, message: '长度在 1 到 16 个字符', trigger: 'blur'}
+                    ],
+                    password: [
+                        {required: true, message: '请输入密码', trigger: 'blur'},
+                        {min: 1, max: 32, message: '长度在 1 到 32 个字符', trigger: 'blur'}
+                    ],
+                    password_comfirmed: [
+                        {required: true, message: '请再次输入密码', trigger: 'blur'},
+                        {
+                            validator: (rule, value, callback) => {
+                                if (this.userRegister.password == this.userRegister.password_comfirmed) {
+                                    callback();
+                                } else {
+                                    callback("两次输入的密码不一致");
+                                }
+                            },
+                            trigger: 'blur',
+                        }
+                    ],
+
+                }
+            };
+        },
+        methods: {
+            register() {
+                this.$refs.form.validate((valid) => {
+                    if (valid) {
+                        if (this.acknowledge) {
+                            const params = new URLSearchParams();
+                            params.append('account', this.userRegister.account);
+                            params.append('password', this.userRegister.password);
+                            axios.post("/user/do_register.do", params)
+                                .then(response => {
+                                    const data = response.data;
+                                    if (data.status === 0) {
+                                        this.$message({
+                                            message: "注册成功",
+                                            type: "success"
+                                        });
+
+                                        setTimeout(() => {
+                                            window.location.href = "./login.html";
+                                        }, 1000);
+                                    } else {
+                                        this.$message(data.msg);
+                                    }
+                                }).catch(err => {
+                                this.$message.error('发送请求失败');
+                            })
+                        } else {
+                            this.$message("请先同意协议");
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>

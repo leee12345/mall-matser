@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>我的订单 | 机械配件商城</title>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/element-ui/index.css">
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/css/common.css"/>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/components/min-width-container.css"/>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/components/footer-bottom.css"/>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/components/footer-image.css"/>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/components/footer-link.css"/>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/components/header-full.css"/>
+		<link rel="stylesheet" type="text/css" href="http://192.168.0.102:8080/components/user-frame.css"/>
+		<style>
+			.app-tab {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				border-bottom: 2px solid #EAEAEA;
+			}
+
+			.app-tab-left li {
+				display: inline-block;
+				position: relative;
+				width: 116px;
+				height: 36px;
+				line-height: 34px;
+				border-bottom: 2px solid transparent;
+				text-align: center;
+				cursor: pointer;
+				top: 2px;
+			}
+
+			.app-tab-left li.active:before{
+				content: "";
+				display: block;
+				position: absolute;
+				width: 0px;
+				height: 0px;
+				border-left: 5px solid transparent;
+				border-top: 5px solid transparent;
+				border-right: 5px solid transparent;
+				border-bottom: 5px solid #3197D7;
+				bottom: 0;
+				right: 53px;
+			}
+
+			.app-tab-left li.active{
+				color: #3197D7;
+				border-bottom: 2px solid #3197D7;
+			}
+
+			.app-order{
+				border: 1px solid #E5EAEC;
+			}
+
+			.app-header{
+				display: grid;
+				grid-template-columns: 1fr 100px 100px 100px 200px 200px;
+				height: 50px;
+				border: 1px solid #ECECEC;
+				background: #F4F4F4;
+				margin-top: 30px;
+				margin-bottom: 20px;
+			}
+
+			.app-header > div{
+				line-height: 48px;
+			}
+
+			.app-order-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				background: #F0F9FE;
+				height: 42px;
+				padding: 0 12px;
+			}
+
+
+			.app-order-head .el-button--mini{
+				padding: 4px 8px;
+			}
+
+			.app-order-items-item{
+				display: grid;
+				grid-template-columns: 1fr 100px 100px 100px 200px 200px;
+				height: 102px;
+				padding: 0 12px;
+				border-top: 1px solid #E5EAEC;
+			}
+
+			.app-order-items-item > div{
+				line-height: 102px;
+			}
+
+			/*展开行样式*/
+			.demo-table-expand {
+				font-size: 0;
+			}
+			.demo-table-expand label {
+				width: 90px;
+				color: #99a9bf;
+			}
+			.demo-table-expand .el-form-item {
+				margin-right: 0;
+				margin-bottom: 0;
+				width: 50%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<header-full :bordered="true"></header-full>
+			<user-frame class="m-t-20">
+
+				<div class="app-tab">
+					<div class="app-tab-left text-general-1">
+						<ul>
+							<li :class="{active: tab == 0}" @click="tab = 0">全部订单[{{all_orders.length}}]</li>
+							<li :class="{active: tab == 1}" @click="tab = 1">待付款[{{wait_orders.length}}]</li>
+							<li :class="{active: tab == 2}" @click="tab = 2">待发货[{{finish_orders.length}}]</li>
+							<li :class="{active: tab == 3}" @click="tab = 3">待收货[{{receive_orders.length}}]</li>
+							<li :class="{active: tab == 4}" @click="tab = 4">已签收[{{already_orders.length}}]</li>
+							<li :class="{active: tab == 5}" @click="tab = 5">已评价[{{commented_orders.length}}]</li>
+							<li :class="{active: tab == 6}" @click="tab = 6">已取消[{{canceled_orders.length}}]</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- 接下来我的任务就是将下面的div改为 带查询，可分页的数据表格 -->
+				<!--				增加一个和-->
+				<el-table
+						:data="[all_orders, wait_orders, finish_orders, receive_orders, already_orders, commented_orders, canceled_orders][tab].
+						filter(data => !search || data.orderItems[0].commodityName.toLowerCase().includes(search.toLowerCase()) || data.orderNo==search)
+						.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+						:default-sort="{prop: 'createTime', order: 'desending'}">
+					<!--					row-class-name : 不同行不同颜色 -->
+					<!--					default-sort : 默认排列顺序 -->
+
+					<!--					实现表格的展开功能，显示次重要的信息-->
+					<el-table-column type="expand">
+						<template slot-scope="props">
+							<el-form label-position="left" inline class="demo-table-expand">
+								<el-form-item label="订单编号">
+									<span>{{ props.row.orderNo }}</span>
+								</el-form-item>
+								<el-form-item label="订单商品">
+									<span>{{ props.row.orderItems[0].commodityName }}</span>
+								</el-form-item>
+								<el-form-item label="商品单价">
+									<span>￥{{ props.row.orderItems[0].curPrice }}</span>
+								</el-form-item>
+								<el-form-item label="购买数量">
+									<span>{{ props.row.orderItems[0].quantity }}</span>
+								</el-form-item>
+								<el-form-item label="实际付款">
+									<span>{{ props.row.orderItems[0].totalPrice }}</span>
+								</el-form-item>
+								<el-form-item label="订单状态">
+									<span>{{ props.row.statusDesc }}</span>
+								</el-form-item>
+								<el-form-item label="收货人">
+									<span>{{ props.row.addr.name }}</span>
+								</el-form-item>
+							</el-form>
+						</template>
+					</el-table-column>
+
+<!--					以下部分是实现基本的表格项，显示最基本的信息-->
+					<el-table-column
+							prop="createTime"
+							label="下单时间"
+							width="180"
+							sortable>
+					</el-table-column>
+					<!--						label：列名-->
+					<!--						prop：对应数据项key-->
+					<!--						width：列宽-->
+					<!--						sorable：是否能排序-->
+					<!--						标签内部使用template：自定义列的内容-->
+
+					<el-table-column
+							label=""
+							width="120">
+						<template slot-scope="scope">
+							<img :src=scope.row.orderItems[0].iconUrl width="120px" height="180px">
+						</template>
+					</el-table-column>
+
+					<el-table-column
+							label="商品名称"
+							prop="orderItems[0].commodityName"
+							width="180">
+					</el-table-column>
+
+					<el-table-column
+							prop="orderItems[0].curPrice"
+							label="单价(元)"
+							width="120"
+							sortable>
+						<template slot-scope="scope">
+							<p style="color: #E58948">￥{{scope.row.orderItems[0].curPrice}}</p>
+						</template>
+					</el-table-column>
+
+					<el-table-column
+							prop="orderItems[0].quantity"
+							label="数量"
+							width="100">
+					</el-table-column>
+
+					<el-table-column
+							prop="statusDesc"
+							label="订单状态"
+							sortable
+							width="150">
+					</el-table-column>
+
+<!--					还有一个对订单的操作，以及相应的自定义表头还没有实现。需要使用具名插槽-->
+					<el-table-column
+							width="230"
+							align="right">
+<!--						看来label对应的是header插槽-->
+<!--						添加根据名称和订单号进行检索的功能-->
+						<template slot="header" slot-scope="scope">
+							<el-input
+									v-model="search"
+									size="mini"
+									clearable
+									placeholder="输入商品标题或订单号进行检索"/>
+						</template>
+<!--						下面是对于订单的操作-->
+						<template slot-scope="scope">
+							<div class="app-order-head-right">
+								<el-button type="primary" :size="'mini'" v-if="scope.row.status == 0"
+										   @click="go_pay(scope.row.orderNo, scope.row.orderItems[0].commodityName,
+										   scope.row.amount, '')">
+									立即付款
+								</el-button>
+								<el-button size="mini" type="text" v-if="scope.row.status == 0"
+										   @click="go_cancel(scope.row)">取消订单
+								</el-button>
+								<el-button type="primary" :size="'mini'" v-if="scope.row.status == 2 "
+										   @click="go_receive(scope.row)">确认收货
+								</el-button>
+								<el-button type="primary" :size="'mini'" v-if="scope.row.status == 3 "
+										   @click="go_comment(scope.row)">添加评论
+								</el-button>
+								<el-button size="mini" type="text" @click="go_comment_detail(scope.row.orderItems[0].orderId)" v-if="scope.row.status == 4 ">查看评论
+								</el-button>
+								<el-button size="mini" type="text" @click="go_order_detail(scope.row.orderNo)">订单详情
+								</el-button>
+							</div>
+						</template>
+					</el-table-column>
+				</el-table>
+<!--				尝试实现分页功能-->
+<!--				我就说，这个分页哪那么容易，明显没有绑定上-->
+<!--				接下来的工作就是把这个分页给绑定上-->
+				<el-pagination
+						:page-sizes="[5, 10, 20, 30]"
+						:page-size="pagesize"
+						layout="total, sizes, prev, pager, next, jumper"
+						@current-change="current_change"
+						@size-change="size_change"
+						@prev-click="pre_click"
+						@next-click="next_click"
+						:total="[all_orders, wait_orders, finish_orders, receive_orders, already_orders, commented_orders, canceled_orders][tab].length"
+						background>
+				</el-pagination>
+
+<!--				显示评论的分页-->
+				<el-dialog
+				title="评论详情"
+				:visible.syn="comment_detail.visible"
+				:before-close="before_close"
+				width="40%">
+
+					评论等级：
+					<el-rate
+							v-model="comment_detail.comment_level"
+							:colors="comment_detail.colors"
+							show-score
+							disabled
+							style="display: inline">
+						<!--            show-score: 显示目前分数-->
+						<!--            使用diabled变为只读-->
+					</el-rate>
+					<el-input
+							type="textarea"
+							:rows="2"
+							:disabled="true"
+							placeholder="请输入评论内容"
+							v-model="comment_detail.comment_content"></el-input>
+				</el-dialog>
+			</user-frame>
+			<footer-image></footer-image>
+			<footer-link></footer-link>
+			<footer-bottom></footer-bottom>
+		</div>
+		<script src="http://192.168.0.102:8080/js/vue.js"></script>
+		<script src="http://192.168.0.102:8080/js/axios.min.js"></script>
+		<script src="http://192.168.0.102:8080/element-ui/index.js"></script>
+		<script src="http://192.168.0.102:8080/components/min-width-container.js"></script>
+		<script src="http://192.168.0.102:8080/components/footer-image.js"></script>
+		<script src="http://192.168.0.102:8080/components/footer-bottom.js"></script>
+		<script src="http://192.168.0.102:8080/components/footer-link.js"></script>
+		<script src="http://192.168.0.102:8080/components/header-full.js"></script>
+		<script src="http://192.168.0.102:8080/components/user-frame.js"></script>
+		<script>
+			const app = new Vue({
+				el: "#app",
+				data() {
+					return {
+						tab: 0,
+						//我有点疑惑为什么这个地方不把三个订单放在一起呢？
+						all_orders: [],//全部订单
+						wait_orders: [],//待付款
+						finish_orders: [],//待签收订单
+						receive_orders: [],//已签收订单
+						already_orders: [],//未评价订单
+						commented_orders: [],//已评价订单
+						canceled_orders:[],//已取消的订单
+						//	接下来是分页需要数据
+						pagesize: 5,//每页的数据条数
+						currentPage: 1,//默认开始页面
+
+						//	表格检索框
+						search: "",
+
+						comment_detail:{
+							visible : false,
+							comment_level : null,
+							comment_content : '',
+							colors: ['#99A9BF', '#F7BA2A', '#FF9900'],
+						},
+					};
+		        },
+		        created(){
+		        	this.load_all_orders();
+		        	this.load_wait_orders();
+		        	this.load_finish_orders();
+		        },
+		        methods: {
+					go_order_detail(orderNo){
+						window.location.href='/order-detail.html?' + orderNo;
+					},
+					load_all_orders(){
+						const temp_orders = [];
+						const append = function(orders){
+							for(let order of orders){
+								temp_orders.push(order);
+							}
+						}
+						this.load_order(0, append);
+						this.load_order(1, append);
+						this.load_order(2, append);
+						this.load_order(3, append);
+						this.load_order(4, append);
+						this.load_order(5, append);
+						this.all_orders = temp_orders;
+						console.log(this.all_orders)
+					},
+					load_wait_orders() {
+						this.load_order(0, (orders) => {
+							this.wait_orders = orders
+						});
+					},
+					load_finish_orders() {
+						this.load_order(1, (orders) => {
+							this.finish_orders = this.finish_orders.concat(orders)
+						});
+						this.load_order(2, (orders) => {
+							this.receive_orders = this.receive_orders.concat(orders);
+						});
+						this.load_order(3, (orders) => {
+							this.already_orders = this.already_orders.concat(orders);
+						});
+						this.load_order(4, (orders) => {
+							this.commented_orders = this.commented_orders.concat(orders);
+						});
+						this.load_order(5, (orders) => {
+							this.canceled_orders = this.canceled_orders.concat(orders);
+						});
+					},
+					load_order(status, callback) {
+						const params = new URLSearchParams();
+						params.append("status", status);
+						axios.post("/order/getlist.do", params).then(response => {
+							if (response.data.status === 0) {
+								callback(response.data.data);
+							} else {
+								if (response.data.msg) {
+									console.log(response.data.msg);
+								}
+							}
+						}).catch(err => {
+							console.log(err);
+						})
+					},
+					go_pay(orderNo, name, quantity, body) {
+						var temp_form = document.createElement("form")
+						temp_form.action = "/ali/pay.do"
+						temp_form.target = "_self"//在本页面打开新窗口
+						temp_form.method = "post"
+						// temp_form.style.display = "none"
+						//添加参数
+						var o1 = document.createElement("textArea")
+						o1.name = "outTradeNo"
+						o1.value = orderNo
+						temp_form.appendChild(o1)
+
+						var o2 = document.createElement("textArea")
+						o2.name = "subject"
+						o2.value = name
+						temp_form.appendChild(o2)
+
+						var o3 = document.createElement("textArea")
+						o3.name = "totalAmount"
+						o3.value = quantity
+						temp_form.appendChild(o3)
+
+						var o4 = document.createElement("textArea")
+						o4.name = "body"
+						o4.value = body
+						temp_form.appendChild(o4)
+
+						document.body.appendChild(temp_form)
+						temp_form.submit()
+					},
+					go_cancel(item) {
+						this.$confirm('取消此订单, 是否继续?', '提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+						}).then(() => {
+							const params = new URLSearchParams();
+							params.append("orderNo", item.orderNo);
+							axios.post("/order/cancelorder.do", params).then(response => {
+						  		if(response.data.status === 0){
+									this.$message({
+										message: "取消成功",
+										type: "success"
+									});
+									this.refresh(item.orderNo, 5, "取消");
+						  		}else{
+						  			if(response.data.msg){
+						  	    		this.$message.error(response.data.msg);
+						  			}
+						  		}
+						    }).catch(err=>{
+						  	    console.log(err);
+						  	    this.$message.error("连接服务器异常");
+						    });
+
+						})
+					},
+					go_receive(item){
+						const params = new URLSearchParams();
+						params.append("orderNo", item.orderNo);
+						axios.post("/order/confirmreceipt.do", params).then(response=>{
+							if(response.data.status === 0){
+								this.$message({
+									message: "收货成功",
+									type: "success"
+								});
+								this.refresh(item.orderNo, 3, "交易成功");
+							}else{
+								if (response.data.msg) {
+									this.$message.error(response.data.msg);
+								}
+							}
+						}).catch(err => {
+							console.log(err);
+							this.$message.error("连接服务器异常");
+						});
+					},
+					/* 更新item的显示 */
+					refresh(orderNo, status, statusDesc) {
+						const item1 = this.all_orders.find((item) => {
+							return item.orderNo === orderNo
+						});
+						const item2 = this.wait_orders.find((item) => {
+							return item.orderNo === orderNo
+						});
+						const item3 = this.finish_orders.find((item) => {
+							return item.orderNo === orderNo
+						});
+						const item4 = this.receive_orders.find((item) => {
+							return item.orderNo === orderNo
+						});
+						const item5 = this.already_orders.find((item) => {
+							return item.orderNo === orderNo
+						});
+						for (let item of [item1, item2, item3, item4, item5]) {
+							if (item !== undefined) {
+								item.status = status;
+								item.statusDesc = statusDesc;
+							}
+						}
+
+					},
+
+					//add order comment(only single item)
+					go_comment(order){
+						//userId in Session
+						window.location = '/order_comment.html?' + order.orderNo
+					},
+
+					go_comment_detail(orderNo){
+						// window.location = '/comment_detail.html' + orderNo
+						const params = new URLSearchParams();
+						params.append("orderNo", orderNo);
+						console.log(orderNo)
+						axios.post("/comment/get_comment_detail.do", params).then(response=>{
+							this.comment_detail.visible = true;
+							// console.log(response)
+							this.comment_detail.comment_level = response.data.data.level
+							this.comment_detail.comment_content = response.data.data.content
+						}).catch(err => {
+							this.$message("读取订单详情失败，请联系系统维护人员！")
+						})
+					},
+
+					before_close() {
+						this.comment_detail.visible = false;
+					},
+
+					//	尝试实现分页功能
+					current_change: function (currentPage) {
+						this.currentPage = currentPage;
+					},
+					pre_click: function () {
+						this.currentPage -= 1;
+					},
+					next_click: function () {
+						this.currentPage += 1;
+					},
+					size_change: function (cur_pageSize) {
+						this.currentPage = 1
+						this.pagesize = cur_pageSize
+					}
+				}
+		    });
+
+		</script>
+	</body>
+</html>
